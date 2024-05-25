@@ -1,3 +1,5 @@
+[![Coverage](https://raw.githubusercontent.com/wiki/snlacks/otp-auth-server/coverage.svg)](https://github.com/snlacks/otp-auth-server/wiki/coverage.html)
+
 # One Time Password Example
 
 This is a one time password backend example. It only includes the login/authentication part, it's not a complete solution. It was originally written to demo proof of concept/implementation. I was going to turn it into a tutorial but I got busy. Thanks!
