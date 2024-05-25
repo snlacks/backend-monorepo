@@ -74,8 +74,24 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "setupFiles": [
+      "<rootDir>/setupTests.ts"
+    ],
     "collectCoverageFrom": [
       "**/*.(t|j)s"
+    ],
+    "coveragePathIgnorePatterns": [
+      "node_modules",
+      "test-config",
+      "interfaces",
+      "jestGlobalMocks.ts",
+      ".module.ts",
+      "main.ts",
+      ".mock.ts",
+      "dist",
+      ".module.ts",
+      ".entity.ts",
+      ".dto.ts"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
