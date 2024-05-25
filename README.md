@@ -1,4 +1,4 @@
-[![Coverage](https://raw.githubusercontent.com/wiki/snlacks/otp-auth-server/coverage.svg)]
+![Coverage](https://raw.githubusercontent.com/wiki/snlacks/otp-auth-server/coverage.svg)
 
 # One Time Password Example
 
