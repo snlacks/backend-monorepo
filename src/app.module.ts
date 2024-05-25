@@ -3,8 +3,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersHTTPModule } from './users/usershttp.module';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { SmsModule } from './sms/sms.module';
 
 const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
   useFactory: () => ({
@@ -28,6 +29,7 @@ const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
     UsersHTTPModule,
     UsersHTTPModule,
     ConfigModule.forRoot(),
+    SmsModule,
     TypeOrmModuleForRoot,
   ],
 })

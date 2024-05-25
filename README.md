@@ -1,6 +1,18 @@
 # One Time Password Example
 This is a one time password backend example. It only includes the login/authentication part, it's not a complete solution. It was originally written to demo proof of concept/implementation. I was going to turn it into a tutorial but I got busy. Thanks!
 
+To get this running:
+
+```bash
+DB_USERNAME=*
+DB_PASSWORD=*
+DB_DATABASE=*
+TWILIO_ACCOUNT_SID=*
+TWILIO_AUTH_TOKEN=*
+```
+
+GET /users (protected)
+POST /users 
 
 ## Description
 

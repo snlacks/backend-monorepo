@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
@@ -24,7 +19,7 @@ export class UsersService {
   }
 
   async add(user: CreateUserDTO): Promise<User> {
-    const { username, phoneNumber } = user;
+    const { username } = user;
 
     if (await this.usersRepository.findOneBy({ username })) {
       throw new HttpException(

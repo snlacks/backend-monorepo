@@ -1,7 +1,16 @@
-import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  HttpCode,
+  HttpStatus,
+  Res,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDTO } from './sign-in.dto';
-import { RequestOTPDTO } from './one-time-password.dto';
+import { RequestOTPDTO } from '../one-time-password/one-time-password.dto';
+import { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -15,10 +24,29 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInDto: SignInDTO) {
-    return this.authService.signIn(
+  async signIn(@Body() signInDto: SignInDTO, @Res() res: Response) {
+    const token = await this.authService.signIn(
       signInDto.username,
       signInDto.oneTimePassword,
     );
+
+    res.cookie('Authenticate', token, {
+      sameSite: 'strict',
+      httpOnly: true,
+    });
+
+    res.send({ success: true });
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('verify')
+  async verify(@Req() req: Request, @Res() res: Response) {
+    const verified = this.authService.verifyToken(req.cookies['Authenticate']);
+
+    res.cookie('Authenticate', this.authService.signToken(verified.data), {
+      sameSite: 'strict',
+      httpOnly: true,
+    });
+    res.send({ success: true });
   }
 }

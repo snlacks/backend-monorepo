@@ -12,7 +12,7 @@ import { User } from './user.entity';
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
-  @Get('/')
+  @Get('`/')
   getAll() {
     return this.usersService.findAll();
   }

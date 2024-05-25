@@ -1,20 +1,21 @@
 import * as crypto from 'crypto';
 import * as otpGenerator from 'otp-generator';
-import * as twilio from 'twilio';
-import { formatISO, addMinutes, isAfter } from 'date-fns';
+import { formatISO, addMinutes, isAfter, isBefore } from 'date-fns';
 import {
   HttpException,
   HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
 
 import { UsersService } from '../users/users.service';
-import { OneTimePassword } from './one-time-password.entity';
+import { OneTimePassword } from '../one-time-password/one-time-password.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { SmsService } from '../sms/sms.service';
 
-const hashOTP = (oneTimePassword: string, salt) =>
+export const hashOTP = (oneTimePassword: string, salt) =>
   new Promise<string>((resolve, reject) =>
     crypto.pbkdf2(oneTimePassword, salt, 1000, 64, `sha512`, (err, h) => {
       if (err) {
@@ -28,16 +29,12 @@ const hashOTP = (oneTimePassword: string, salt) =>
 export class AuthService {
   constructor(
     private usersService: UsersService,
+    private smsService: SmsService,
     @InjectRepository(OneTimePassword)
     private otpRepository: Repository<OneTimePassword>,
   ) {}
 
-  smsClient = twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN,
-  );
-
-  async signIn(username: string, oneTimePassword: string): Promise<any> {
+  async signIn(username: string, oneTimePassword: string): Promise<string> {
     const user = await this.usersService.findOne(username);
     if (!user) {
       throw new UnauthorizedException();
@@ -56,12 +53,10 @@ export class AuthService {
     if (hash !== entry.hash) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
-    // TODO: Generate a token
-    // TODO: Add endpoints for checking, updating token
-    return { success: true };
+    return await this.signToken(entry.username);
   }
 
-  async requestOTP(username: string): Promise<boolean> {
+  async requestOTP(username: string): Promise<string> {
     const user = await this.usersService.findOne(username);
     if (!user) {
       throw new UnauthorizedException();
@@ -86,7 +81,7 @@ export class AuthService {
     });
 
     await new Promise((resolve, reject) =>
-      this.smsClient.messages
+      this.smsService.client.messages
         .create({
           body: `Your one-time passcode is ${oneTimePassword}`,
           from: process.env.ONE_TIME_PASSWORD_SMS_SENDER_NUMBER,
@@ -96,5 +91,26 @@ export class AuthService {
         .catch(reject),
     );
     return oneTimePassword;
+  }
+
+  signToken(username: string) {
+    return jwt.sign({ data: username }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
+  }
+
+  verifyToken(token: string): jwt.JwtPayload & { data: string } {
+    const verified = jwt.verify(token, process.env.JWT_SECRET) as
+      | jwt.JwtPayload
+      | string;
+
+    if (
+      verified.hasOwnProperty('data') &&
+      verified.hasOwnProperty('exp') &&
+      isBefore(new Date(), new Date((verified as jwt.JwtPayload).exp * 1000))
+    ) {
+      return verified as jwt.JwtPayload & { data };
+    }
+    throw new UnauthorizedException();
   }
 }

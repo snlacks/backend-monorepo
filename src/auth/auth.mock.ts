@@ -1,0 +1,5 @@
+export const someToken = () =>
+  'some_good_token1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoic25sYWNrcy4xQGdtYWlsLmNvbSIsImlhdCI6MTcxNjU5Mjg2NiwiZXhwIjoxNzE2NTk2NDY2fQ.coXvywSs3VbT_Ql0V-HlWVS1Xnw4pXNhGInE4WET33M';
+
+export const someBadToken = () =>
+  'some_bad_tokenI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoic25sYWNrcy4xQGdtYWlsLmNvbSIsImlhdCI6MTcxNjU5Mjg2NiwiZXhwIjoxNzE2NTk2NDY2fQ.coXvywSs3VbT_Ql0V-HlWVS1Xnw4pXNhGInE4WET33M';
