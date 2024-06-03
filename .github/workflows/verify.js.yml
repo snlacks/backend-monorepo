@@ -32,3 +32,7 @@ jobs:
         uses: huk10/node-coverage-report@v1
         with:
           command: npm run test:ci
+          amend: true
+        if: |
+          github.event_name == 'push'
+        continue-on-error: true
