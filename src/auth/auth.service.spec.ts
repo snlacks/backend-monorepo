@@ -4,17 +4,26 @@ import { AuthService, hashOTP } from './auth.service';
 import { OneTimePassword } from '../one-time-password/one-time-password.entity';
 import { UsersService } from 'src/users/users.service';
 import { addYears } from 'date-fns';
-import { someBadToken } from './auth.mock';
+import { JwtService } from '@nestjs/jwt';
+import { User } from '../users/user.entity';
+import { jwtConfig } from '../_mock-data/jwt-config-data';
 
 describe('AuthService', () => {
   let service: AuthService;
   let otpRepo: Repository<OneTimePassword>;
   let userService: UsersService;
+  let smsService: SmsService;
+  let jwtService: JwtService;
+
   const testUser = {
     username: 'test@test.com',
     phoneNumber: '+1123456789',
   };
 
+  const testUserWithRoles = {
+    ...testUser,
+    roles: [{ role_id: 'USER' }],
+  } as User;
   const testPass = '123456';
   const testSalt = 'salty';
   let testHash: string;
@@ -36,7 +45,6 @@ describe('AuthService', () => {
   });
 
   beforeEach(async () => {
-    process.env.JWT_SECRET = 'somesecret';
     otpRepo = {
       findOne: jest.fn(),
       delete: jest.fn(),
@@ -44,23 +52,25 @@ describe('AuthService', () => {
       findOneBy: jest.fn(async () => otpEntity),
     } as any;
 
+    smsService = new SmsService();
+
     userService = {
-      findOne: jest.fn(() => testUser),
+      findOne: jest.fn(() => testUserWithRoles),
     } as any;
 
-    service = new AuthService(userService, new SmsService(), otpRepo);
-  });
+    jwtService = new JwtService(jwtConfig);
 
-  afterEach(() => {
-    process.env.JWT_SECRET = undefined;
+    service = new AuthService(userService, smsService, otpRepo, jwtService);
   });
 
   it('should be defined', () => {
+    expect.assertions(1);
     expect(service).toBeDefined();
   });
   describe('#requestOTP', () => {
     it('should request a one time password', async () => {
-      expect((await service.requestOTP(testUser.username)).length).toBe(6);
+      expect.assertions(4);
+      expect((await service.requestOTP(testUser)).length).toBe(6);
 
       expect(userService.findOne).toHaveBeenCalledWith(testUser.username);
       expect((otpRepo.insert as jest.Mock).mock.calls[0][0].username).toBe(
@@ -75,27 +85,26 @@ describe('AuthService', () => {
 
       service = new AuthService(
         { ...userService, findOne: () => undefined } as any,
-        new SmsService(),
+        smsService,
         otpRepo,
+        jwtService,
       );
 
-      await service.requestOTP('notauser').catch((e) => {
-        expect(e.message).toBe('Unauthorized');
-      });
-    });
-  });
-
-  describe('#signToken', () => {
-    it('should sign a token', () => {
-      expect(service.signToken(testUser.username).length).toBe(159);
+      await service
+        .requestOTP({ username: 'notauser', phoneNumber: '+1234567890' })
+        .catch((e) => {
+          expect(e.message).toBe('Unauthorized');
+        });
     });
   });
 
   describe('#signIn', () => {
+    expect.assertions(1);
     it('should sign in', async () => {
-      expect(await service.signIn(testUser.username, testPass)).toHaveLength(
-        159,
-      );
+      expect.assertions(1);
+      await service
+        .signIn(testUser.username, testPass)
+        .then((d) => expect(d.token).toHaveLength(252));
     });
 
     it('should throw when wrong password', async () => {
@@ -112,6 +121,7 @@ describe('AuthService', () => {
         { ...userService, findOne: () => undefined } as any,
         new SmsService(),
         otpRepo,
+        new JwtService(),
       );
 
       await service
@@ -127,12 +137,17 @@ describe('AuthService', () => {
     it('should throw when no user', async () => {
       expect.assertions(1);
 
-      service = new AuthService(userService, new SmsService(), {
-        ...otpRepo,
-        findOneBy: jest.fn(async () => {
-          return expiredEntity;
-        }) as any,
-      } as any);
+      service = new AuthService(
+        userService,
+        new SmsService(),
+        {
+          ...otpRepo,
+          findOneBy: jest.fn(async () => {
+            return expiredEntity;
+          }) as any,
+        } as any,
+        new JwtService(),
+      );
 
       await service
         .signIn(
@@ -142,18 +157,6 @@ describe('AuthService', () => {
         .catch((e) => {
           expect(e.message).toBe('Unauthorized');
         });
-    });
-  });
-
-  describe('#verify', () => {
-    it('should verify a token', () => {
-      expect(
-        Object.keys(service.verifyToken(service.signToken(testUser.username))),
-      ).toStrictEqual(['data', 'iat', 'exp']);
-    });
-
-    it('should throw when fails verify a token', () => {
-      expect(() => service.verifyToken(someBadToken())).toThrow();
     });
   });
 });

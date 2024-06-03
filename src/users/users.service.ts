@@ -3,12 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDTO } from './create-user.dto';
+import { Role } from '../roles/role.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Role)
+    private userRoleRepository: Repository<Role>,
   ) {}
   async findAll(): Promise<User[] | undefined> {
     return this.usersRepository.find();
@@ -27,9 +30,12 @@ export class UsersService {
         HttpStatus.CONFLICT,
       );
     }
-
     try {
-      await this.usersRepository.insert(user);
+      const newUser = await this.usersRepository.create({
+        ...user,
+        roles: [{ ...new Role(), role_id: 'USER' }],
+      });
+      await this.usersRepository.save(newUser);
     } catch (error) {
       throw new HttpException('Unknown', HttpStatus.UNPROCESSABLE_ENTITY);
     }

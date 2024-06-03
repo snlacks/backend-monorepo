@@ -1,10 +1,19 @@
 import { IsEmail, IsNotEmpty, IsPhoneNumber } from 'class-validator';
-import { Entity, Column, Index, PrimaryColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
+import { Role } from '../roles/role.entity';
 
 @Entity()
 export class User {
-  @PrimaryColumn()
-  @Index({ unique: true })
+  @PrimaryGeneratedColumn('uuid')
+  user_id: string;
+
+  @Column({ unique: true })
   @IsEmail()
   @IsNotEmpty()
   username: string;
@@ -13,4 +22,25 @@ export class User {
   @IsPhoneNumber()
   @IsNotEmpty()
   phoneNumber: string;
+
+  @ManyToMany(() => Role, (role) => role.role_id, {
+    eager: true,
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  @JoinTable({
+    name: 'user_role',
+    joinColumn: {
+      name: 'user_id',
+      referencedColumnName: 'user_id',
+      foreignKeyConstraintName: 'user_role_user_id',
+    },
+    inverseJoinColumn: {
+      name: 'role_id',
+      referencedColumnName: 'role_id',
+      foreignKeyConstraintName: 'user_role_role_id',
+    },
+  })
+  @IsNotEmpty()
+  roles: Role[];
 }

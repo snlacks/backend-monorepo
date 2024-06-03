@@ -1,19 +1,17 @@
 import * as crypto from 'crypto';
 import * as otpGenerator from 'otp-generator';
-import { formatISO, addMinutes, isAfter, isBefore } from 'date-fns';
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
+import { formatISO, addMinutes, isAfter } from 'date-fns';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { UsersService } from '../users/users.service';
 import { OneTimePassword } from '../one-time-password/one-time-password.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SmsService } from '../sms/sms.service';
+import { JwtService } from '@nestjs/jwt';
+import { User } from '../users/user.entity';
+import { RequestOTPDTO } from '../one-time-password/one-time-password.dto';
+import { AuthGuard } from './auth.guard';
 
 export const hashOTP = (oneTimePassword: string, salt) =>
   new Promise<string>((resolve, reject) =>
@@ -24,6 +22,10 @@ export const hashOTP = (oneTimePassword: string, salt) =>
       resolve(h.toString('hex'));
     }),
   );
+const phoneChars = new RegExp('()-', 'gi');
+
+const phoneMatch = (p1: string, p2: string) =>
+  p1.replace(phoneChars, '') === p2.replace(phoneChars, '');
 
 @Injectable()
 export class AuthService {
@@ -32,9 +34,13 @@ export class AuthService {
     private smsService: SmsService,
     @InjectRepository(OneTimePassword)
     private otpRepository: Repository<OneTimePassword>,
+    private jwtService: JwtService,
   ) {}
 
-  async signIn(username: string, oneTimePassword: string): Promise<string> {
+  async signIn(
+    username: string,
+    oneTimePassword: string,
+  ): Promise<{ user: User; token: string }> {
     const user = await this.usersService.findOne(username);
     if (!user) {
       throw new UnauthorizedException();
@@ -45,24 +51,27 @@ export class AuthService {
     });
 
     if (isAfter(new Date(), new Date(entry.expiration))) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+      throw new UnauthorizedException();
     }
 
     const hash = await hashOTP(oneTimePassword, entry.salt);
 
     if (hash !== entry.hash) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+      throw new UnauthorizedException();
     }
-    return await this.signToken(entry.username);
+    return {
+      user,
+      token: await AuthGuard.getSignerPayload(user, this.jwtService),
+    };
   }
 
-  async requestOTP(username: string): Promise<string> {
-    const user = await this.usersService.findOne(username);
-    if (!user) {
+  async requestOTP(userInfo: RequestOTPDTO): Promise<string> {
+    const user = await this.usersService.findOne(userInfo.username);
+    if (!user || !phoneMatch(user.phoneNumber, userInfo.phoneNumber)) {
       throw new UnauthorizedException();
     }
 
-    await this.otpRepository.delete({ username });
+    await this.otpRepository.delete({ username: user.username });
 
     const oneTimePassword = otpGenerator.generate(6, {
       lowerCaseAlphabets: false,
@@ -74,7 +83,7 @@ export class AuthService {
     const hash = await hashOTP(oneTimePassword, salt);
 
     await this.otpRepository.insert({
-      username,
+      username: user.username,
       hash,
       salt,
       expiration: formatISO(addMinutes(new Date(), 15)),
@@ -91,26 +100,5 @@ export class AuthService {
         .catch(reject),
     );
     return oneTimePassword;
-  }
-
-  signToken(username: string) {
-    return jwt.sign({ data: username }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
-    });
-  }
-
-  verifyToken(token: string): jwt.JwtPayload & { data: string } {
-    const verified = jwt.verify(token, process.env.JWT_SECRET) as
-      | jwt.JwtPayload
-      | string;
-
-    if (
-      verified.hasOwnProperty('data') &&
-      verified.hasOwnProperty('exp') &&
-      isBefore(new Date(), new Date((verified as jwt.JwtPayload).exp * 1000))
-    ) {
-      return verified as jwt.JwtPayload & { data };
-    }
-    throw new UnauthorizedException();
   }
 }
