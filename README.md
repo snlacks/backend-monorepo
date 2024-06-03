@@ -1,8 +1,8 @@
 ![Coverage](https://raw.githubusercontent.com/wiki/snlacks/otp-auth-server/coverage.svg)
 
-# One Time Password Example
+# One Time Password Server and AI Chat Gateway
 
-This is a one time password backend example. It only includes the login/authentication part, it's not a complete solution. It was originally written to demo proof of concept/implementation. I was going to turn it into a tutorial but I got busy. Thanks!
+PLEASE don't just pull this and try to run this for your production server. Please. Please, not for licensing, you're welcome to take this code. It's just not vetted enough. This is a one time password backend and AI chat gateway to an Ollama Server. It requries a login via SMS to access the chat, has basic plubming for roles (User and Admin are included, but it should be easy to add more) and generating tokens in dev environment. 
 
 To get this running:
 
@@ -14,57 +14,19 @@ TWILIO_ACCOUNT_SID=*
 TWILIO_AUTH_TOKEN=*
 ONE_TIME_PASSWORD_SMS_SENDER_NUMBER=*
 JWT_SECRET=*
+JWT_EXPIRES=*
+OLLAMA_URI=*
 ```
 
-GET /users (protected)
-POST /users
+POST  /auth/request-otp
+POST  /auth/login
+POST  /auth/refresh
+GET   /users (protected, role Admin)
+POST  /users
+POST  /ai-chat/chat-strram/
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
-```bash
-$ npm install
-```
-
-## Running the app
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+It uses external dependencies (each has a module): Ollama webservice, Twillio, and MySql. Because they're in OO/Nest Modules they should be really easy to replace with other external services.
 
 ## License
 
-Nest is [MIT licensed](LICENSE).
+This is [MIT licensed](LICENSE).
