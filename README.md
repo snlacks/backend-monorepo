@@ -1,6 +1,6 @@
 ![Coverage](https://raw.githubusercontent.com/wiki/snlacks/otp-auth-server/coverage.svg)
 
-# It likes to call itWhispy - Generative AI Portal
+# Generative AI Portal - It likes to call itself Whispy
 
 How I got this name? I asked the chat server what it thought I should call the web gateway that authenticates its users and connects to it, it said to call it "The Web Wizard", "API Dialogist" or " Sparkly Listener"...
 
