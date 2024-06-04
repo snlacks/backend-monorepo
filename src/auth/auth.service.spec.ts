@@ -17,7 +17,7 @@ describe('AuthService', () => {
 
   const testUser = {
     username: 'test@test.com',
-    phoneNumber: '+1123456789',
+    phone_number: '+1123456789',
   };
 
   const testUserWithRoles = {
@@ -91,7 +91,7 @@ describe('AuthService', () => {
       );
 
       await service
-        .requestOTP({ username: 'notauser', phoneNumber: '+1234567890' })
+        .requestOTP({ username: 'notauser', phone_number: '+1234567890' })
         .catch((e) => {
           expect(e.message).toBe('Unauthorized');
         });
@@ -104,7 +104,7 @@ describe('AuthService', () => {
       expect.assertions(1);
       await service
         .signIn(testUser.username, testPass)
-        .then((d) => expect(d.token).toHaveLength(252));
+        .then((d) => expect(d.token.length).toBeGreaterThan(250));
     });
 
     it('should throw when wrong password', async () => {

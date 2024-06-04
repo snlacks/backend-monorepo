@@ -15,10 +15,6 @@ export class ForDevOnlyGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (isDevOnly && process.env.NODE_ENV !== DEVELOPMENT) {
-      console.log(process.env.NODE_ENV);
-      return false;
-    }
     if (process.env.NODE_ENV === DEVELOPMENT || !isDevOnly) {
       return true;
     }

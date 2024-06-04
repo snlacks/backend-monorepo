@@ -21,7 +21,7 @@ export class User {
   @Column()
   @IsPhoneNumber()
   @IsNotEmpty()
-  phoneNumber: string;
+  phone_number: string;
 
   @ManyToMany(() => Role, (role) => role.role_id, {
     eager: true,

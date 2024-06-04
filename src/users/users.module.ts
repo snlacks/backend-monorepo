@@ -3,9 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Role } from '../roles/role.entity';
 import { UsersService } from './users.service';
-
+import { GuestKeysModule } from '../guest-keys/guest-keys.module';
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Role])],
+  imports: [GuestKeysModule, TypeOrmModule.forFeature([User, Role])],
   providers: [UsersService],
   exports: [TypeOrmModule, UsersService],
 })

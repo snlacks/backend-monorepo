@@ -5,18 +5,10 @@ import { Role } from './role.entity';
 import RolesService from './roles.service';
 import { RolesGuard } from './roles.guard';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtModule } from '@nestjs/jwt';
+import TokenModule from '../token/token.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User, Role]),
-    JwtModule.registerAsync({
-      useFactory: () => ({
-        secret: process.env.JWT_SECRET,
-        signOptions: { expiresIn: process.env.JWT_EXPIRES },
-      }),
-    }),
-  ],
+  imports: [TypeOrmModule.forFeature([User, Role]), TokenModule],
   providers: [RolesService, { provide: APP_GUARD, useClass: RolesGuard }],
   exports: [TypeOrmModule, RolesService],
 })

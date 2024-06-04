@@ -16,6 +16,5 @@ export class AiChatController {
     for await (const part of chatResponse as any) {
       res.write(JSON.stringify(part));
     }
-    res.end();
   }
 }

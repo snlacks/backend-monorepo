@@ -12,7 +12,7 @@ describe('AuthGuard', () => {
   let reflector: Reflector;
   const testUser = {
     username: 'test@test.com',
-    phoneNumber: '+1123456789',
+    phone_number: '+1123456789',
     roles: [],
   };
   let cookieSpy: Response['cookie'];
@@ -53,7 +53,21 @@ describe('AuthGuard', () => {
       { secret: 'some secret' },
     );
   });
-
+  it('should fail when user is not present on an otherwise signed token', async () => {
+    guard = new AuthGuard(
+      {
+        ...jwtService,
+        verifyAsync: () => ({
+          data: undefined,
+        }),
+      } as any,
+      reflector,
+    );
+    expect.assertions(1);
+    await guard
+      .canActivate(context as any)
+      .catch((e) => expect(e.message).toBe('Unauthorized'));
+  });
   it('should fail when unverifiable', async () => {
     guard = new AuthGuard(
       {
@@ -79,6 +93,19 @@ describe('AuthGuard', () => {
         switchToHttp: () => ({
           ...context.switchToHttp(),
           getRequest: () => ({ cookies: {} }),
+        }),
+      } as any)
+      .catch((e) => expect(e.message).toBe('Unauthorized'));
+  });
+  it('should fail if no cookie set', async () => {
+    guard = new AuthGuard(jwtService, reflector);
+    expect.assertions(1);
+    await guard
+      .canActivate({
+        ...context,
+        switchToHttp: () => ({
+          ...context.switchToHttp(),
+          getResponse: () => ({ cookie: undefined }),
         }),
       } as any)
       .catch((e) => expect(e.message).toBe('Unauthorized'));

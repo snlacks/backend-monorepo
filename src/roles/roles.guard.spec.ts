@@ -12,7 +12,7 @@ describe('RolesGuard', () => {
   let reflector: Reflector;
   const testUser = {
     username: 'test@test.com',
-    phoneNumber: '+1123456789',
+    phone_number: '+1123456789',
     roles: [{ role_id: 'USER', role_name: 'user' }],
   };
   beforeEach(() => {

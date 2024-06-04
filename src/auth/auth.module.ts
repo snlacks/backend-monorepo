@@ -3,23 +3,13 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { OneTimePasswordModule } from '../one-time-password/one-time-password.module';
 import { SmsModule } from '../sms/sms.module';
-import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from './auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
+import TokenModule from '../token/token.module';
 
 @Module({
-  imports: [
-    UsersModule,
-    OneTimePasswordModule,
-    SmsModule,
-    JwtModule.registerAsync({
-      useFactory: () => ({
-        secret: process.env.JWT_SECRET,
-        signOptions: { expiresIn: process.env.JWT_EXPIRES },
-      }),
-    }),
-  ],
+  imports: [UsersModule, OneTimePasswordModule, SmsModule, TokenModule],
   providers: [
     AuthService,
     {

@@ -1,18 +1,24 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
-import { CreateUserDTO } from './create-user.dto';
+import { CreateUserDTO } from './dto/create-user.dto';
 import { Role } from '../roles/role.entity';
+import { GuestKeysService } from '../guest-keys/guest-keys.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    @InjectRepository(Role)
-    private userRoleRepository: Repository<Role>,
+    private guestKeysService: GuestKeysService,
   ) {}
+
   async findAll(): Promise<User[] | undefined> {
     return this.usersRepository.find();
   }
@@ -21,25 +27,32 @@ export class UsersService {
     return this.usersRepository.findOneBy({ username });
   }
 
-  async add(user: CreateUserDTO): Promise<User> {
+  async add({ guest_key_id, ...user }: CreateUserDTO): Promise<User> {
     const { username } = user;
+    const key = await this.guestKeysService.findOne(guest_key_id);
+    if (!key) {
+      throw new UnauthorizedException();
+    } else {
+      this.guestKeysService.remove(guest_key_id);
+    }
 
-    if (await this.usersRepository.findOneBy({ username })) {
+    const existingUser = await this.usersRepository.findOneBy({ username });
+    if (existingUser) {
       throw new HttpException(
         'Conflict, must use a unique username',
         HttpStatus.CONFLICT,
       );
     }
+
     try {
       const newUser = await this.usersRepository.create({
         ...user,
         roles: [{ ...new Role(), role_id: 'USER' }],
       });
-      await this.usersRepository.save(newUser);
+      const result = await this.usersRepository.save(newUser);
+      return result;
     } catch (error) {
       throw new HttpException('Unknown', HttpStatus.UNPROCESSABLE_ENTITY);
     }
-
-    return this.usersRepository.findOneBy({ username });
   }
 }

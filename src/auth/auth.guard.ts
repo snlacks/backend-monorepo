@@ -25,13 +25,13 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-
     if (isPublic) {
       return true;
     }
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 
+    console.log(context);
     const token = await AuthGuard.extractTokenFromCookie(request);
     if (!token) {
       throw new UnauthorizedException();
@@ -76,13 +76,13 @@ export class AuthGuard implements CanActivate {
     response: Response,
     jwtService: JwtService,
   ) => {
-    await response.cookie(
-      'Authorization',
-      AuthGuard.wrapCookie(await AuthGuard.getSignerPayload(user, jwtService)),
-      {
-        sameSite: 'strict',
-        httpOnly: true,
-      },
+    const token = await AuthGuard.wrapCookie(
+      await AuthGuard.getSignerPayload(user, jwtService),
     );
+    await response.cookie('Authorization', token, {
+      sameSite: 'strict',
+      httpOnly: true,
+    });
+    return token;
   };
 }

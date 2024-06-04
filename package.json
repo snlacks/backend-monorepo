@@ -1,7 +1,7 @@
 {
-  "name": "nest-educational-project",
-  "version": "0.0.1",
-  "description": "",
+  "name": "whispy-portal",
+  "version": "0.1.0",
+  "description": "Whispy - Generative AI Portal",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

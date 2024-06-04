@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { testUser } from '../_mock-data/user-data';
 import { jwtConfig } from '../_mock-data/jwt-config-data';
+import { UsersService } from '../users/users.service';
 
 export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
   ({
@@ -19,13 +20,19 @@ export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
 describe('AuthController', () => {
   let jwtService: JwtService;
   let authService: AuthService;
+  let usersService: UsersService;
   let controller: AuthController;
   let response: Response;
   let request: Request;
   beforeEach(() => {
     jwtService = new JwtService(jwtConfig);
     authService = AuthServiceMock();
-    controller = new AuthController(authService, jwtService);
+    usersService = {
+      findAll: jest.fn(() => [testUser]),
+      add: jest.fn(),
+    } as any;
+    controller = new AuthController(authService, jwtService, usersService);
+
     response = {
       cookie: jest.fn(),
       send: jest.fn(),
@@ -56,6 +63,7 @@ describe('AuthController', () => {
           },
         } as any,
         jwtService,
+        usersService,
       );
       await controller
         .requestOTP(testUser)
@@ -89,6 +97,29 @@ describe('AuthController', () => {
       await controller.refreshToken(request, response);
       expect(response.cookie).toHaveBeenCalled();
       expect(response.send).toHaveBeenCalledWith(testUser);
+    });
+  });
+
+  describe('#getUsers', () => {
+    it('should get all', async () => {
+      expect(await controller.getUsers()).toStrictEqual([testUser]);
+      expect(usersService.findAll).toHaveBeenCalled();
+    });
+  });
+
+  describe('#addUser', () => {
+    it('should add a user', async () => {
+      const createUser = { ...testUser, guest_key_id: 'some_guest_key' };
+      expect(await controller.addUser(createUser)).toBeUndefined();
+      expect(usersService.add).toHaveBeenCalledWith(createUser);
+    });
+  });
+  describe('#devToken', () => {
+    it('should add a user', async () => {
+      expect.assertions(2);
+      const tokenUser = { ...testUser, roles: [], user_id: '1234567' };
+      expect(await controller.devToken(tokenUser, response)).toBeUndefined();
+      expect(response.send).toHaveBeenCalled();
     });
   });
 });

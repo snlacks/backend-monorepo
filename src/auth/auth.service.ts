@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { SmsService } from '../sms/sms.service';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/user.entity';
-import { RequestOTPDTO } from '../one-time-password/one-time-password.dto';
+import { RequestOTPDTO } from '../one-time-password/dto/one-time-password.dto';
 import { AuthGuard } from './auth.guard';
 
 export const hashOTP = (oneTimePassword: string, salt) =>
@@ -67,7 +67,7 @@ export class AuthService {
 
   async requestOTP(userInfo: RequestOTPDTO): Promise<string> {
     const user = await this.usersService.findOne(userInfo.username);
-    if (!user || !phoneMatch(user.phoneNumber, userInfo.phoneNumber)) {
+    if (!user || !phoneMatch(user.phone_number, userInfo.phone_number)) {
       throw new UnauthorizedException();
     }
 
@@ -94,7 +94,7 @@ export class AuthService {
         .create({
           body: `Your one-time passcode is ${oneTimePassword}`,
           from: process.env.ONE_TIME_PASSWORD_SMS_SENDER_NUMBER,
-          to: user.phoneNumber,
+          to: user.phone_number,
         })
         .then(resolve)
         .catch(reject),

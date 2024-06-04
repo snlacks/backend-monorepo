@@ -2,7 +2,6 @@ import { ConsoleLogger, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { UsersHTTPModule } from './users/users-http.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { SmsModule } from './sms/sms.module';
@@ -29,7 +28,6 @@ const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
   imports: [
     AiChatModule,
     AuthModule,
-    UsersHTTPModule,
     ConfigModule.forRoot(),
     RolesModule,
     SmsModule,

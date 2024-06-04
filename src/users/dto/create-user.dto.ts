@@ -6,5 +6,8 @@ export class CreateUserDTO {
 
   @IsPhoneNumber()
   @IsNotEmpty()
-  phoneNumber: string;
+  phone_number: string;
+
+  @IsNotEmpty()
+  guest_key_id: string;
 }
