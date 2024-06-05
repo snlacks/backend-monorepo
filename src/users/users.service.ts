@@ -31,20 +31,19 @@ export class UsersService {
     const { username } = user;
     const key = await this.guestKeysService.findOne(guest_key_id);
     if (!key) {
-      throw new UnauthorizedException();
-    } else {
-      this.guestKeysService.remove(guest_key_id);
+      throw new UnauthorizedException('Invalid invitation');
     }
-
     const existingUser = await this.usersRepository.findOneBy({ username });
     if (existingUser) {
       throw new HttpException(
-        'Conflict, must use a unique username',
+        "We can't verify that email, it might be invalid or already registered.",
         HttpStatus.CONFLICT,
       );
     }
 
     try {
+      this.guestKeysService.remove(guest_key_id).catch(console.error);
+
       const newUser = await this.usersRepository.create({
         ...user,
         roles: [{ ...new Role(), role_id: 'USER' }],
