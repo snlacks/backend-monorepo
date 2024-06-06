@@ -55,7 +55,9 @@ describe('UsersService', () => {
     await service
       .add(testUserWithGuestKey)
       .catch((e) =>
-        expect(e.message).toBe('Conflict, must use a unique username'),
+        expect(e.message).toBe(
+          "We can't verify that email, it might be invalid or already registered.",
+        ),
       );
   });
 
@@ -71,7 +73,7 @@ describe('UsersService', () => {
     try {
       await service.add(testUserWithGuestKey);
     } catch (e) {
-      expect(e.message).toBe('Unauthorized');
+      expect(e.message).toBe('Invalid invitation');
 
       expect(guestKeysService.findOne).toHaveBeenCalledWith(
         testUserWithGuestKey.guest_key_id,

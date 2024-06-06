@@ -42,7 +42,7 @@ export class UsersService {
     }
 
     try {
-      this.guestKeysService.remove(guest_key_id).catch(console.error);
+      this.guestKeysService.remove(guest_key_id);
 
       const newUser = await this.usersRepository.create({
         ...user,
@@ -51,6 +51,7 @@ export class UsersService {
       const result = await this.usersRepository.save(newUser);
       return result;
     } catch (error) {
+      console.log(error);
       throw new HttpException('Unknown', HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }
