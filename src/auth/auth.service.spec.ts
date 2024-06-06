@@ -2,7 +2,7 @@ import { Repository } from 'typeorm';
 import { SmsService } from '../sms/sms.module.mock';
 import { AuthService, hashOTP } from './auth.service';
 import { OneTimePassword } from '../one-time-password/one-time-password.entity';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from '../users/users.service';
 import { addYears } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/user.entity';
