@@ -51,7 +51,6 @@ export class UsersService {
       const result = await this.usersRepository.save(newUser);
       return result;
     } catch (error) {
-      console.log(error);
       throw new HttpException('Unknown', HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }
