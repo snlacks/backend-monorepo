@@ -22,7 +22,7 @@ export const hashOTP = (oneTimePassword: string, salt) =>
       resolve(h.toString('hex'));
     }),
   );
-const phoneChars = new RegExp('()-', 'gi');
+const phoneChars = new RegExp('(\\(|\\)|-|\\s*)+', 'gi');
 
 const phoneMatch = (p1: string, p2: string) =>
   p1.replace(phoneChars, '') === p2.replace(phoneChars, '');
