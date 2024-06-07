@@ -65,7 +65,7 @@ export class AuthController {
   async signIn(@Body() signInDto: SignInDTO, @Res() res: Response) {
     const { user, token } = await this.authService.signIn(
       signInDto.username,
-      signInDto.oneTimePassword,
+      signInDto.one_time_password,
     );
 
     res.cookie('Authorization', AuthGuard.wrapCookie(token), {
@@ -88,7 +88,15 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
   async refreshToken(@Req() req: Request, @Res() res: Response) {
-    await AuthGuard.setCookie(req['user'], res, this.jwtService);
     res.send(req['user']);
+  }
+
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @Post('sign-out')
+  async signOut(@Res() res: Response) {
+    res.clearCookie('Authorization');
+    // res.cookie('Authorization', '', { maxAge: 0, expires: new Date() });
+    res.send();
   }
 }

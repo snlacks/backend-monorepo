@@ -77,7 +77,7 @@ describe('AuthController', () => {
       await controller.signIn(
         {
           username: testUser.username,
-          oneTimePassword: '123456',
+          one_time_password: '123456',
         },
         response,
       );
