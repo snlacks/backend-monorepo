@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
@@ -16,6 +17,7 @@ export class RolesGuard implements CanActivate {
     private jwtService: JwtService,
     private reflector: Reflector,
   ) {}
+  private readonly logger = new Logger(RolesGuard.name);
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     let authorized = false;
@@ -29,7 +31,7 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const token = await AuthGuard.extractTokenFromCookie(request);
+    const token = AuthGuard.extractTokenFromCookie(request);
     if (!token) {
       throw new UnauthorizedException();
     }
@@ -41,7 +43,8 @@ export class RolesGuard implements CanActivate {
       authorized = requiredRoles.some(
         (role) => request.user.roles?.find(({ role_id }) => role === role_id),
       );
-    } catch {
+    } catch (e) {
+      this.logger.error(e);
       throw new UnauthorizedException();
     }
     return authorized;

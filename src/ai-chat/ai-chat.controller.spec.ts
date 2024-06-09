@@ -4,7 +4,6 @@ import { AiChatController } from './ai-chat.controller';
 import { AiChatService } from './ai-chat.service';
 
 const part = { message: { content: 'hi' } };
-const sentPart = JSON.stringify(part);
 
 describe('AiChatController', () => {
   let controller: AiChatController;
@@ -13,9 +12,14 @@ describe('AiChatController', () => {
     controller = new AiChatController(
       new AiChatService({
         chat: jest.fn(() => [part]),
+        create: jest.fn(),
       } as unknown as OllamaService),
     );
-    res = { write: jest.fn(), end: jest.fn() } as unknown as Response;
+    res = {
+      write: jest.fn(),
+      end: jest.fn(),
+      setHeader: jest.fn(),
+    } as unknown as Response;
   });
 
   it('should load', async () => {
@@ -23,6 +27,6 @@ describe('AiChatController', () => {
       await controller.chatStream({ message: 'What color is an orange?' }, res),
     ).toBeUndefined();
 
-    expect(res.write).toHaveBeenCalledWith(sentPart);
+    expect(res.write).toHaveBeenCalledWith(part.message.content);
   });
 });

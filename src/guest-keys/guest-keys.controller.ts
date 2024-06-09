@@ -15,7 +15,7 @@ import { CreateGuestKeyDto } from './dto/create-guest-key.dto';
 
 @Roles(ROLE.ADMIN)
 @UseGuards(RolesGuard)
-@Controller('guest-keys')
+@Controller('/guest-keys')
 export class GuestKeysController {
   constructor(private readonly guestKeysService: GuestKeysService) {}
 

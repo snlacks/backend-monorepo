@@ -1,4 +1,9 @@
-import { IsNotEmpty, IsEmail, IsPhoneNumber } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEmail,
+  IsPhoneNumber,
+  IsStrongPassword,
+} from 'class-validator';
 export class CreateUserDTO {
   @IsEmail()
   @IsNotEmpty()
@@ -7,6 +12,16 @@ export class CreateUserDTO {
   @IsPhoneNumber()
   @IsNotEmpty()
   phone_number: string;
+
+  @IsStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 1,
+  })
+  @IsNotEmpty()
+  password: string;
 
   @IsNotEmpty()
   guest_key_id: string;

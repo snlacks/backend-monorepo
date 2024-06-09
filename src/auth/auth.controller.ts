@@ -6,11 +6,15 @@ import {
   HttpStatus,
   Res,
   Req,
-  UnauthorizedException,
   UseGuards,
   Get,
   UsePipes,
   ValidationPipe,
+  Put,
+  UnauthorizedException,
+  Param,
+  Delete,
+  Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDTO } from './dto/sign-in.dto';
@@ -26,6 +30,10 @@ import { UsersService } from '../users/users.service';
 import { Roles } from '../roles/roles.decorator';
 import { ROLE } from '../roles/roles';
 import { CreateUserDTO } from '../users/dto/create-user.dto';
+import { UpdatePasswordDTO } from '../users/dto/update-password-dto';
+import { SignInPasswordOnlyDto } from './dto/sign-in-password.dto';
+import { UserResponse } from '../users/types';
+import { SmsResponse } from './types';
 
 @Controller('auth')
 export class AuthController {
@@ -34,6 +42,8 @@ export class AuthController {
     private jwtService: JwtService,
     private usersService: UsersService,
   ) {}
+
+  logger = new Logger();
 
   @Get('/users')
   @Roles(ROLE.ADMIN)
@@ -44,59 +54,134 @@ export class AuthController {
   @Post('/users')
   @UsePipes(new ValidationPipe({ transform: true }))
   @Public()
-  addUser(@Body() user: CreateUserDTO) {
-    return this.usersService.add(user);
+  async addUser(@Body() user: CreateUserDTO, @Res() res: Response) {
+    const newUser = await this.usersService.add(user);
+    res.status(201);
+    res.send(newUser);
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('request-otp')
-  async requestOTP(@Body() requestOTPDTO: RequestOTPDTO) {
+  @Post('/request-otp')
+  async requestOTP(@Body() requestOTPDTO: RequestOTPDTO, @Res() res: Response) {
     try {
-      await this.authService.requestOTP(requestOTPDTO);
-    } catch {
+      const otpResponse = await this.authService.requestOTP(requestOTPDTO);
+      if ((otpResponse as User)?.user_id) {
+        await AuthGuard.setAuthorizationCookie(
+          otpResponse as User,
+          res,
+          this.jwtService,
+        );
+      }
+      res.status(201);
+      res.send(
+        otpResponse.hasOwnProperty('oneTimePassword') ? otpResponse : null,
+      );
+    } catch (e) {
+      this.logger.log(e);
       throw new UnauthorizedException();
     }
-    return;
   }
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  async signIn(@Body() signInDto: SignInDTO, @Res() res: Response) {
-    const { user, token } = await this.authService.signIn(
+  async login(@Body() signInDto: SignInDTO, @Res() res: Response) {
+    const { user, token } = await this.authService.verifyOTP(
       signInDto.username,
       signInDto.one_time_password,
     );
-
-    res.cookie('Authorization', AuthGuard.wrapCookie(token), {
-      sameSite: 'strict',
-      httpOnly: true,
-    });
+    res.cookie(
+      AuthGuard.AUTHORIZATION_COOKIE_NAME,
+      AuthGuard.wrapCookie(token),
+      {
+        sameSite: 'strict',
+        httpOnly: true,
+      },
+    );
 
     res.send(user);
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
+  @Post('login-password')
+  async loginPassword(
+    @Body() signInDto: SignInPasswordOnlyDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    let user: UserResponse | SmsResponse;
+    try {
+      const { data: knownDevice } = await this.jwtService.verifyAsync(
+        req.cookies[AuthGuard.DEVICE_COOKIE_NAME],
+        {
+          secret: process.env.JWT_SECRET,
+        },
+      );
+      user = await this.authService.loginPasswordOnly(signInDto, knownDevice);
+    } catch (e) {
+      user = await this.authService.loginPasswordOnly(signInDto);
+    }
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    if ((user as UserResponse)?.user_id) {
+      res.status(200);
+      res.cookie(
+        AuthGuard.AUTHORIZATION_COOKIE_NAME,
+        AuthGuard.wrapCookie(
+          await AuthGuard.getSignerPayload(
+            user as UserResponse,
+            this.jwtService,
+          ),
+        ),
+        {
+          sameSite: 'strict',
+          httpOnly: true,
+        },
+      );
+    }
+
+    return res.send(user);
+  }
+
+  @Put('/users/password')
+  @Roles(ROLE.ADMIN)
+  updatePassword(dto: UpdatePasswordDTO) {
+    return this.usersService.updatePassword(dto);
+  }
+
+  @Public()
+  @HttpCode(HttpStatus.OK)
   @ForDevOnly()
   @UseGuards(ForDevOnlyGuard)
-  @Post('dev-token')
+  @Post('/dev-token')
   async devToken(@Body() user: User, @Res() res: Response) {
-    res.send(await AuthGuard.setCookie(user, res, this.jwtService));
+    res.send(
+      await AuthGuard.setAuthorizationCookie(user, res, this.jwtService),
+    );
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('refresh')
+  @Post('/refresh')
   async refreshToken(@Req() req: Request, @Res() res: Response) {
     res.send(req['user']);
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('sign-out')
+  @Post('/sign-out')
   async signOut(@Res() res: Response) {
-    res.clearCookie('Authorization');
-    // res.cookie('Authorization', '', { maxAge: 0, expires: new Date() });
+    res.clearCookie(AuthGuard.AUTHORIZATION_COOKIE_NAME);
+    res.send();
+  }
+
+  @Roles(ROLE.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Delete('/users/:id')
+  async removeUser(@Param() params: { id: string }, @Res() res: Response) {
+    await this.usersService.remove(params.id);
+    res.status(204);
     res.send();
   }
 }

@@ -5,6 +5,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToMany,
   JoinTable,
+  Index,
 } from 'typeorm';
 import { Role } from '../roles/role.entity';
 
@@ -14,13 +15,13 @@ export class User {
   user_id: string;
 
   @Column({ unique: true })
+  @Index()
   @IsEmail()
   @IsNotEmpty()
   username: string;
 
   @Column()
   @IsPhoneNumber()
-  @IsNotEmpty()
   phone_number: string;
 
   @ManyToMany(() => Role, (role) => role.role_id, {

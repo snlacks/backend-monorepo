@@ -5,7 +5,12 @@ import { useContainer } from 'typeorm';
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger:
+      process.env.NODE_ENV === 'development'
+        ? ['log', 'debug', 'error', 'verbose', 'warn']
+        : ['error', 'warn'],
+  });
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.enableCors({

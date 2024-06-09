@@ -2,20 +2,29 @@ import { Repository } from 'typeorm';
 import { UsersService } from './users.service';
 import { User } from './user.entity';
 import { GuestKeysService } from '../guest-keys/guest-keys.service';
+import { Password } from './password.entity';
 
 describe('UsersService', () => {
   const testUser = {
     username: 'test@test.com',
     phone_number: '+1123456789',
+    password: 'S+r0nGxo@$',
   };
   const testUserWithGuestKey = { ...testUser, guest_key_id: 'some_key' };
   const testUserWithRoles = {
     ...testUser,
     roles: [{ role_id: 'USER' }],
   };
+  const testUserInserted = { user_id: 'some_id', ...testUserWithRoles };
+  const testPassword = {
+    hash: '51095db2e39071770c5a58347d023dea292b7ec50d22f87163a2859f3071e56d686e879fac075e2704e0b081a2be5728f8de75436d270beed439b0467b074870',
+    salt: '66272c15a954d5fa382515eda57ab3da',
+    expiration: '2050-06-07T12:00:54-04:00',
+  };
   let service: UsersService;
   let userRepo: Repository<User>;
   let guestKeysService: GuestKeysService;
+  let passwordRepo: Repository<Password>;
 
   beforeEach(async () => {
     userRepo = {
@@ -32,7 +41,12 @@ describe('UsersService', () => {
       findOne: jest.fn(() => 'some_key'),
       remove: jest.fn(),
     } as any;
-    service = new UsersService(userRepo, guestKeysService);
+    passwordRepo = {
+      create: jest.fn(() => testPassword),
+      save: jest.fn(() => undefined),
+      insert: jest.fn(),
+    } as any;
+    service = new UsersService(userRepo, guestKeysService, passwordRepo);
   });
 
   it('should find user', async () => {
@@ -69,7 +83,7 @@ describe('UsersService', () => {
       findOne: jest.fn(),
     } as any;
 
-    service = new UsersService(userRepo, guestKeysService as any);
+    service = new UsersService(userRepo, guestKeysService as any, passwordRepo);
     try {
       await service.add(testUserWithGuestKey);
     } catch (e) {
@@ -87,11 +101,13 @@ describe('UsersService', () => {
       ...userRepo,
       findOneBy: jest.fn(() => null),
       create: jest.fn(() => testUserWithRoles),
-      save: jest.fn(),
+      save: jest.fn(() => testUserInserted),
     } as any;
 
-    service = new UsersService(userRepo, guestKeysService);
-    expect(await service.add(testUserWithGuestKey)).toBeUndefined();
+    service = new UsersService(userRepo, guestKeysService, passwordRepo);
+    expect(await service.add(testUserWithGuestKey)).toStrictEqual(
+      testUserInserted,
+    );
     expect(userRepo.findOneBy).toHaveBeenCalledWith({
       username: testUser.username,
     });
@@ -116,7 +132,7 @@ describe('UsersService', () => {
       }),
     } as any;
 
-    service = new UsersService(userRepo, guestKeysService);
+    service = new UsersService(userRepo, guestKeysService, passwordRepo);
     try {
       await service.add(testUserWithGuestKey);
     } catch (e) {

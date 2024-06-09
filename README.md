@@ -22,12 +22,15 @@ JWT_EXPIRES=*
 OLLAMA_URI=*
 ```
 
-POST /auth/request-otp
+POST /auth/request-otp accepts password or phone number. If password and known device,
 POST /auth/login
-POST /auth/refresh
-GET /users (protected, role Admin)
-POST /users
-POST /ai-chat/chat-strram/
+POST /auth/refresh (protected, self - returns user, updates token expire)
+POST /auth/dev-token (protected, dev only)
+POST /auth/sign-out (remove HTTP only cookie if it exists)
+GET /auth/users (protected, role Admin)
+POST /auth/users (reqires guest key, to limit public access)
+PUT /auth/users/password
+POST /ai-chat/chat-stream/
 
 It uses external dependencies (each has a module): Ollama webservice, Twillio, and MySql. Because they're in OO/Nest Modules they should be really easy to replace with other external services.
 

@@ -6,7 +6,7 @@ import { Request, Response } from 'express';
 import { testUser } from '../_mock-data/user-data';
 import { jwtConfig } from '../_mock-data/jwt-config-data';
 import { UsersService } from '../users/users.service';
-
+import { AuthGuard } from './auth.guard';
 export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
   ({
     signIn: jest.fn(async () => ({
@@ -15,6 +15,7 @@ export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
     })),
     requestOTP: jest.fn(() => new Promise((resolve) => resolve('123456'))),
     ...props,
+    verifyOTP: jest.fn(() => ({ user: testUser, token: someToken() })),
   }) as unknown as AuthService;
 
 describe('AuthController', () => {
@@ -36,6 +37,7 @@ describe('AuthController', () => {
     response = {
       cookie: jest.fn(),
       send: jest.fn(),
+      status: jest.fn(),
     } as any;
     request = {
       cookies: { Authorization: someToken() },
@@ -49,8 +51,10 @@ describe('AuthController', () => {
   describe('#requestOTP', () => {
     it('should get a one time password', async () => {
       expect.assertions(2);
-      expect(await controller.requestOTP(testUser)).toBeUndefined();
-      expect(authService.requestOTP).toHaveBeenCalledWith(testUser);
+      await controller.requestOTP(testUser, response).then((d) => {
+        expect(d).toBeUndefined();
+        expect(authService.requestOTP).toHaveBeenCalledWith(testUser);
+      });
     });
 
     it('should fail to get a one time password', async () => {
@@ -66,7 +70,7 @@ describe('AuthController', () => {
         usersService,
       );
       await controller
-        .requestOTP(testUser)
+        .requestOTP(testUser, response)
         .catch((e) => expect(e.message).toBe('Unauthorized'));
 
       expect(authService.requestOTP).not.toHaveBeenCalled();
@@ -74,7 +78,7 @@ describe('AuthController', () => {
   });
   describe('#signin', () => {
     it('should signin', async () => {
-      await controller.signIn(
+      await controller.login(
         {
           username: testUser.username,
           one_time_password: '123456',
@@ -82,7 +86,7 @@ describe('AuthController', () => {
         response,
       );
       expect(response.cookie).toHaveBeenCalledWith(
-        'Authorization',
+        AuthGuard.AUTHORIZATION_COOKIE_NAME,
         `Bearer ${someToken()}`,
         {
           httpOnly: true,
@@ -94,9 +98,10 @@ describe('AuthController', () => {
 
   describe('#refreshToken,/refresh', () => {
     it('should verify and refresh', async () => {
-      await controller.refreshToken(request, response);
-      expect(response.cookie).toHaveBeenCalled();
-      expect(response.send).toHaveBeenCalledWith(testUser);
+      expect.assertions(1);
+      await controller.refreshToken(request, response).then(() => {
+        expect(response.send).toHaveBeenCalledWith(testUser);
+      });
     });
   });
 
@@ -110,8 +115,11 @@ describe('AuthController', () => {
   describe('#addUser', () => {
     it('should add a user', async () => {
       const createUser = { ...testUser, guest_key_id: 'some_guest_key' };
-      expect(await controller.addUser(createUser)).toBeUndefined();
-      expect(usersService.add).toHaveBeenCalledWith(createUser);
+      const userWithPassword = { ...createUser, password: '1Ba!@xowow' };
+      expect(
+        await controller.addUser(userWithPassword, response),
+      ).toBeUndefined();
+      expect(usersService.add).toHaveBeenCalledWith(userWithPassword);
     });
   });
   describe('#devToken', () => {

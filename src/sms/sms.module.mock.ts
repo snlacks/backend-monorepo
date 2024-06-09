@@ -10,7 +10,12 @@ export class SmsService {
       messages: {
         create: jest
           .fn()
-          .mockImplementation(() => new Promise<void>((resolve) => resolve())),
+          .mockImplementation(
+            () =>
+              new Promise<{ errorMessage: string; body: string }>((resolve) =>
+                resolve({ errorMessage: '', body: '' }),
+              ),
+          ),
       },
     } as unknown as TwilioClient;
   }

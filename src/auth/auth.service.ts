@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import * as otpGenerator from 'otp-generator';
 import { formatISO, addMinutes, isAfter } from 'date-fns';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 import { UsersService } from '../users/users.service';
 import { OneTimePassword } from '../one-time-password/one-time-password.entity';
@@ -12,6 +12,14 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/user.entity';
 import { RequestOTPDTO } from '../one-time-password/dto/one-time-password.dto';
 import { AuthGuard } from './auth.guard';
+import { Password } from '../users/password.entity';
+import { MessageInstance as TwMessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
+import { SignInPasswordOnlyDto } from './dto/sign-in-password.dto';
+import { UserResponse } from '../users/types';
+import { SmsResponse } from './types';
+
+const isDevTest =
+  process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 
 export const hashOTP = (oneTimePassword: string, salt) =>
   new Promise<string>((resolve, reject) =>
@@ -24,9 +32,32 @@ export const hashOTP = (oneTimePassword: string, salt) =>
   );
 const phoneChars = new RegExp('(\\(|\\)|-|\\s*)+', 'gi');
 
-const phoneMatch = (p1: string, p2: string) =>
-  p1.replace(phoneChars, '') === p2.replace(phoneChars, '');
+const phoneMatch = (
+  dto: RequestOTPDTO,
+  userPhone: string,
+): { passwordRequired: string; match?: boolean } => {
+  if (dto?.password) {
+    return { passwordRequired: 'required' };
+  }
+  if (
+    dto?.phone_number?.replace(phoneChars, '') !==
+    userPhone.replace(phoneChars, '')
+  ) {
+    throw new UnauthorizedException();
+  }
+  return { match: true, passwordRequired: '' };
+};
 
+const passMatch = async (entry: Password | OneTimePassword, password) => {
+  const hash = await hashOTP(password, entry.salt);
+
+  if (hash !== entry.hash) {
+    throw new UnauthorizedException();
+  }
+  return {
+    match: true,
+  };
+};
 @Injectable()
 export class AuthService {
   constructor(
@@ -36,8 +67,9 @@ export class AuthService {
     private otpRepository: Repository<OneTimePassword>,
     private jwtService: JwtService,
   ) {}
+  private readonly logger = new Logger(AuthService.name);
 
-  async signIn(
+  async verifyOTP(
     username: string,
     oneTimePassword: string,
   ): Promise<{ user: User; token: string }> {
@@ -65,40 +97,97 @@ export class AuthService {
     };
   }
 
-  async requestOTP(userInfo: RequestOTPDTO): Promise<string> {
+  async loginPasswordOnly(
+    userInfo: SignInPasswordOnlyDto,
+    knownDevice?: string,
+  ): Promise<SmsResponse | UserResponse> {
+    try {
+      const user = await this.usersService.findOne(userInfo.username);
+      const entry = await this.usersService.findPass(user.user_id);
+      await passMatch(entry, userInfo.password);
+      if (knownDevice !== user.user_id) {
+        return this.sendOtp(user);
+      }
+      return user;
+    } catch (e) {
+      this.logger.error(e);
+    }
+  }
+
+  async requestOTP(
+    userInfo: RequestOTPDTO,
+  ): Promise<string | User | SmsResponse> {
+    if (!userInfo.password && !userInfo.phone_number) {
+      this.logger.error('No credentials');
+      throw new UnauthorizedException('No credentials');
+    }
     const user = await this.usersService.findOne(userInfo.username);
-    if (!user || !phoneMatch(user.phone_number, userInfo.phone_number)) {
+    let phoneMatchResponse;
+
+    try {
+      phoneMatchResponse = phoneMatch(userInfo, user.phone_number);
+    } catch (e) {
+      this.logger.error(e);
       throw new UnauthorizedException();
     }
 
-    await this.otpRepository.delete({ username: user.username });
+    try {
+      if (phoneMatchResponse.password === 'required') {
+        const entry = await this.usersService.findPass(user.user_id);
+        await passMatch(entry, userInfo.password);
+      }
+    } catch (e) {
+      this.logger.error(e);
+    }
+    const smsReponse = await this.sendOtp(user);
 
-    const oneTimePassword = otpGenerator.generate(6, {
-      lowerCaseAlphabets: false,
-      upperCaseAlphabets: false,
-      specialChars: false,
-    });
+    return isDevTest ? smsReponse : '';
+  }
 
-    const salt = crypto.randomBytes(16).toString('hex');
-    const hash = await hashOTP(oneTimePassword, salt);
+  async sendOtp(user: UserResponse): Promise<SmsResponse> {
+    let smsResponse: TwMessageInstance;
+    let oneTimePassword: string;
+    try {
+      await this.otpRepository.delete({ username: user.username });
+      oneTimePassword = otpGenerator.generate(6, {
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+      });
 
-    await this.otpRepository.insert({
-      username: user.username,
-      hash,
-      salt,
-      expiration: formatISO(addMinutes(new Date(), 15)),
-    });
+      const salt = crypto.randomBytes(16).toString('hex');
+      const hash = await hashOTP(oneTimePassword, salt);
 
-    await new Promise((resolve, reject) =>
-      this.smsService.client.messages
-        .create({
-          body: `Your one-time passcode is ${oneTimePassword}`,
-          from: process.env.ONE_TIME_PASSWORD_SMS_SENDER_NUMBER,
-          to: user.phone_number,
-        })
-        .then(resolve)
-        .catch(reject),
-    );
-    return oneTimePassword;
+      await this.otpRepository.insert({
+        username: user.username,
+        hash,
+        salt,
+        expiration: formatISO(addMinutes(new Date(), 15)),
+      });
+
+      smsResponse = await new Promise<TwMessageInstance>((resolve, reject) =>
+        this.smsService.client.messages
+          .create({
+            body: `Your one-time passcode is ${oneTimePassword}`,
+            from: process.env.ONE_TIME_PASSWORD_SMS_SENDER_NUMBER,
+            to: user.phone_number,
+          })
+          .then((d: TwMessageInstance) => {
+            resolve(d);
+          })
+          .catch((reason) => {
+            this.logger.error(reason);
+            reject(reason);
+          }),
+      );
+    } catch (e) {
+      this.logger.error(e);
+    }
+    const finalResponse = {
+      oneTimePassword: oneTimePassword.replace(/\d{6}/, '######'),
+      errorMessage: smsResponse?.errorMessage,
+      body: smsResponse?.body.replace(/\d{6}/, '######'),
+    };
+    return finalResponse as SmsResponse;
   }
 }

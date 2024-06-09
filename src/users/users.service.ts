@@ -2,22 +2,40 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { Role } from '../roles/role.entity';
 import { GuestKeysService } from '../guest-keys/guest-keys.service';
+import { addYears, formatISO } from 'date-fns';
+import { Password } from './password.entity';
+import { UpdatePasswordDTO } from './dto/update-password-dto';
+import { UserResponse } from './types';
 
+export const hashPassword = (password: string, salt) =>
+  new Promise<string>((resolve, reject) =>
+    crypto.pbkdf2(password, salt, 1000, 64, `sha512`, (err, h) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(h.toString('hex'));
+    }),
+  );
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private guestKeysService: GuestKeysService,
+    @InjectRepository(Password)
+    private passwordRepository: Repository<Password>,
   ) {}
+  private readonly logger = new Logger(UsersService.name);
 
   async findAll(): Promise<User[] | undefined> {
     return this.usersRepository.find();
@@ -27,7 +45,38 @@ export class UsersService {
     return this.usersRepository.findOneBy({ username });
   }
 
-  async add({ guest_key_id, ...user }: CreateUserDTO): Promise<User> {
+  async findPass(user_id: string) {
+    return this.passwordRepository.findOneBy({ user_id });
+  }
+  async updatePassword({
+    username,
+    old_password,
+    new_password,
+  }: UpdatePasswordDTO) {
+    const { user_id } = await this.usersRepository.findOneBy({
+      username,
+    });
+    const entry = await this.passwordRepository.findOneBy({ user_id });
+    const oldHash = await hashPassword(old_password, entry.salt);
+
+    if (oldHash !== entry.hash) {
+      throw new UnauthorizedException();
+    }
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = await hashPassword(new_password, salt);
+    await this.passwordRepository.update(
+      {
+        user_id: user_id,
+      },
+      {
+        hash,
+        salt,
+        expiration: formatISO(addYears(new Date(), 2)),
+      },
+    );
+  }
+
+  async add({ guest_key_id, ...user }: CreateUserDTO): Promise<UserResponse> {
     const { username } = user;
     const key = await this.guestKeysService.findOne(guest_key_id);
     if (!key) {
@@ -44,14 +93,33 @@ export class UsersService {
     try {
       this.guestKeysService.remove(guest_key_id);
 
-      const newUser = await this.usersRepository.create({
+      const salt = crypto.randomBytes(16).toString('hex');
+      const hash = await hashPassword(user.password, salt);
+      const pDTO = {
+        hash,
+        salt,
+        expiration: formatISO(addYears(new Date(), 2)),
+      };
+      const newUser = this.usersRepository.create({
         ...user,
         roles: [{ ...new Role(), role_id: 'USER' }],
       });
+      // if (!newPass) {
+      //   throw new Error('Password error');
+      // }
       const result = await this.usersRepository.save(newUser);
+      await this.passwordRepository.insert({
+        ...pDTO,
+        user_id: result.user_id,
+      });
       return result;
     } catch (error) {
+      this.logger.error(error);
       throw new HttpException('Unknown', HttpStatus.UNPROCESSABLE_ENTITY);
     }
+  }
+  async remove(user_id: string) {
+    await this.usersRepository.delete({ user_id });
+    await this.passwordRepository.delete({ user_id });
   }
 }

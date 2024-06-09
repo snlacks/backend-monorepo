@@ -70,12 +70,16 @@ describe('AuthService', () => {
   describe('#requestOTP', () => {
     it('should request a one time password', async () => {
       expect.assertions(4);
-      expect((await service.requestOTP(testUser)).length).toBe(6);
+      expect(await service.requestOTP(testUser)).toStrictEqual({
+        body: '',
+        errorMessage: '',
+        oneTimePassword: '######',
+      });
 
       expect(userService.findOne).toHaveBeenCalledWith(testUser.username);
-      expect((otpRepo.insert as jest.Mock).mock.calls[0][0].username).toBe(
-        testUser.username,
-      );
+      expect(
+        (otpRepo.insert as jest.Mock).mock.calls[0][0].username,
+      ).toStrictEqual(testUser.username);
       expect(
         Object.keys((otpRepo.insert as jest.Mock).mock.calls[0][0]),
       ).toStrictEqual(['username', 'hash', 'salt', 'expiration']);
@@ -103,13 +107,13 @@ describe('AuthService', () => {
     it('should sign in', async () => {
       expect.assertions(1);
       await service
-        .signIn(testUser.username, testPass)
+        .verifyOTP(testUser.username, testPass)
         .then((d) => expect(d.token.length).toBeGreaterThan(250));
     });
 
     it('should throw when wrong password', async () => {
       expect.assertions(1);
-      await service.signIn(testUser.username, 'wrongpass').catch((e) => {
+      await service.verifyOTP(testUser.username, 'wrongpass').catch((e) => {
         expect(e.message).toBe('Unauthorized');
       });
     });
@@ -125,7 +129,7 @@ describe('AuthService', () => {
       );
 
       await service
-        .signIn(
+        .verifyOTP(
           'notauser', // this is demonstrative, the service throws an error because UserService returns undefind
           testPass,
         )
@@ -150,7 +154,7 @@ describe('AuthService', () => {
       );
 
       await service
-        .signIn(
+        .verifyOTP(
           'notauser', // this is demonstrative, the service throws an error because UserService returns undefind
           testPass,
         )
