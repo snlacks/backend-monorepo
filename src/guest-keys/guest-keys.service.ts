@@ -16,7 +16,10 @@ export class GuestKeysService {
   }
 
   findOne(guest_key_id: string) {
-    return this.repository.findOneBy({ guest_key_id });
+    return (
+      process.env.UNIVERSAL_GUEST_KEY ??
+      this.repository.findOneBy({ guest_key_id })
+    );
   }
 
   remove(guest_key_id: string) {
