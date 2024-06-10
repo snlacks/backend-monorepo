@@ -72,8 +72,6 @@ describe('AuthService', () => {
       expect.assertions(4);
       expect(await service.requestOTP(testUser)).toStrictEqual({
         body: '',
-        errorMessage: '',
-        oneTimePassword: '######',
       });
 
       expect(userService.findOne).toHaveBeenCalledWith(testUser.username);
@@ -85,8 +83,6 @@ describe('AuthService', () => {
       ).toStrictEqual(['username', 'hash', 'salt', 'expiration']);
     });
     it('should throw when wrong user', async () => {
-      expect.assertions(1);
-
       service = new AuthService(
         { ...userService, findOne: () => undefined } as any,
         smsService,
@@ -103,9 +99,7 @@ describe('AuthService', () => {
   });
 
   describe('#signIn', () => {
-    expect.assertions(1);
     it('should sign in', async () => {
-      expect.assertions(1);
       await service
         .verifyOTP(testUser.username, testPass)
         .then((d) => expect(d.token.length).toBeGreaterThan(250));

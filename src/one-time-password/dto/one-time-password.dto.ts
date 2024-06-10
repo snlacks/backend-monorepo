@@ -5,6 +5,4 @@ export class RequestOTPDTO {
   username: string;
 
   phone_number?: string;
-
-  password?: string;
 }

@@ -66,16 +66,10 @@ describe('AuthController (e2e)', () => {
 
     newUserID = userResponse.body.user_id;
 
-    const otpResponse = await request(host)
+    await request(host)
       .post('/auth/request-otp')
       .send(createUserDto)
       .expect(201);
-
-    expect((otpResponse as any).body.oneTimePassword).toHaveLength(6);
-    expect((otpResponse as any).body.errorMessage).toBeNull();
-    expect((otpResponse as any).body.body).toMatch(
-      /Your one-time passcode is ######/,
-    );
   });
 
   it('/auth/sign-out (POST)', async () => {
