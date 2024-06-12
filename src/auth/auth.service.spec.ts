@@ -6,14 +6,21 @@ import { UsersService } from '../users/users.service';
 import { addYears } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/user.entity';
-import { jwtConfig } from '../_mock-data/jwt-config-data';
+import TokenService from '../token/token.service';
+import { someToken } from './auth.mock';
 
 describe('AuthService', () => {
   let service: AuthService;
   let otpRepo: Repository<OneTimePassword>;
   let userService: UsersService;
   let smsService: SmsService;
-  let jwtService: JwtService;
+
+  const _jwtService = {
+    signAsync: jest.fn(someToken),
+    verifyAsync: jest.fn(() => ({ data: testUser })),
+  } as unknown as JwtService;
+
+  let tokenService;
 
   const testUser = {
     username: 'test@test.com',
@@ -58,9 +65,8 @@ describe('AuthService', () => {
       findOne: jest.fn(() => testUserWithRoles),
     } as any;
 
-    jwtService = new JwtService(jwtConfig);
-
-    service = new AuthService(userService, smsService, otpRepo, jwtService);
+    tokenService = new TokenService(_jwtService);
+    service = new AuthService(userService, smsService, otpRepo, tokenService);
   });
 
   it('should be defined', () => {
@@ -87,7 +93,7 @@ describe('AuthService', () => {
         { ...userService, findOne: () => undefined } as any,
         smsService,
         otpRepo,
-        jwtService,
+        tokenService,
       );
 
       await service
@@ -102,7 +108,7 @@ describe('AuthService', () => {
     it('should sign in', async () => {
       await service
         .verifyOTP(testUser.username, testPass)
-        .then((d) => expect(d.token.length).toBeGreaterThan(250));
+        .then((d) => expect(d.token.length).toBeGreaterThan(150));
     });
 
     it('should throw when wrong password', async () => {
@@ -119,7 +125,7 @@ describe('AuthService', () => {
         { ...userService, findOne: () => undefined } as any,
         new SmsService(),
         otpRepo,
-        new JwtService(),
+        tokenService,
       );
 
       await service
@@ -144,7 +150,7 @@ describe('AuthService', () => {
             return expiredEntity;
           }) as any,
         } as any,
-        new JwtService(),
+        tokenService,
       );
 
       await service

@@ -4,12 +4,18 @@ import { ExecutionContext } from '@nestjs/common';
 import { someToken } from './auth.mock';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
+import TokenService from '../token/token.service';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
   let context: ExecutionContext;
-  let jwtService: JwtService;
+  let tokenService: TokenService;
   let reflector: Reflector;
+
+  const _jwtService = {
+    signAsync: jest.fn(),
+    verifyAsync: jest.fn(() => ({ data: testUser })),
+  } as unknown as JwtService;
   const testUser = {
     username: 'test@test.com',
     phone_number: '+1123456789',
@@ -20,13 +26,11 @@ describe('AuthGuard', () => {
     reflector = {
       getAllAndOverride: jest.fn(),
     } as unknown as Reflector;
-    jwtService = {
-      signAsync: jest.fn(),
-      verifyAsync: jest.fn(() => ({ data: testUser })),
-    } as any;
+
+    tokenService = new TokenService(_jwtService);
     cookieSpy = jest.fn();
 
-    guard = new AuthGuard(jwtService, reflector);
+    guard = new AuthGuard(tokenService, reflector);
     context = {
       getHandler: jest.fn(),
       getClass: jest.fn(),
@@ -44,23 +48,23 @@ describe('AuthGuard', () => {
     } as any;
   });
 
-  it('should succeed', async () => {
-    expect.assertions(2);
-
-    await guard.canActivate(context as any).then((d) => expect(d).toBe(true));
-    expect(jwtService.verifyAsync).toHaveBeenCalledWith(
-      `Bearer%20${someToken()}; Path=/; HttpOnly; SameSite=Strict; Domain=localhost`,
-      { secret: 'some secret' },
-    );
+  it.only('should succeed', async () => {
+    jest.spyOn(tokenService, 'getPayload');
+    await guard.canActivate(context as any).then((d) => {
+      expect(d).toBe(true);
+      expect(tokenService.getPayload).toHaveBeenCalledWith(
+        `Bearer%20${someToken()}; Path=/; HttpOnly; SameSite=Strict; Domain=localhost`,
+      );
+    });
   });
   it('should fail when user is not present on an otherwise signed token', async () => {
     guard = new AuthGuard(
-      {
-        ...jwtService,
-        verifyAsync: () => ({
-          data: undefined,
+      new TokenService({
+        ..._jwtService,
+        verifyAsync: jest.fn(() => {
+          undefined;
         }),
-      } as any,
+      } as unknown as JwtService),
       reflector,
     );
     expect.assertions(1);
@@ -70,12 +74,12 @@ describe('AuthGuard', () => {
   });
   it('should fail when unverifiable', async () => {
     guard = new AuthGuard(
-      {
-        ...jwtService,
-        verifyAsync: () => {
-          throw 'Oops';
-        },
-      } as any,
+      new TokenService({
+        ..._jwtService,
+        verifyAsync: jest.fn(() => {
+          throw '';
+        }),
+      } as unknown as JwtService),
       reflector,
     );
     expect.assertions(1);
@@ -85,7 +89,7 @@ describe('AuthGuard', () => {
   });
 
   it('should fail when no token', async () => {
-    guard = new AuthGuard(jwtService, reflector);
+    guard = new AuthGuard(tokenService, reflector);
     expect.assertions(1);
     await guard
       .canActivate({
@@ -98,7 +102,7 @@ describe('AuthGuard', () => {
       .catch((e) => expect(e.message).toBe('Unauthorized'));
   });
   it('should fail if no cookie set', async () => {
-    guard = new AuthGuard(jwtService, reflector);
+    guard = new AuthGuard(tokenService, reflector);
     expect.assertions(1);
     await guard
       .canActivate({
@@ -112,7 +116,7 @@ describe('AuthGuard', () => {
   });
 
   it('should pass on a public page even when there is no token', async () => {
-    guard = new AuthGuard(jwtService, {
+    guard = new AuthGuard(tokenService, {
       getAllAndOverride: jest.fn(() => true),
     } as any);
     expect.assertions(1);

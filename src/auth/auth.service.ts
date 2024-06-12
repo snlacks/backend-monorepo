@@ -2,21 +2,21 @@ import * as crypto from 'crypto';
 import * as assert from 'assert';
 import * as otpGenerator from 'otp-generator';
 import { formatISO, addMinutes, isBefore } from 'date-fns';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { UsersService } from '../users/users.service';
 import { OneTimePassword } from '../one-time-password/one-time-password.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SmsService } from '../sms/sms.service';
-import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/user.entity';
 import { RequestOTPDTO } from '../one-time-password/dto/one-time-password.dto';
-import { AuthGuard } from './auth.guard';
 import { Password } from '../users/password.entity';
 import { SignInPasswordOnlyDto } from './dto/sign-in-password.dto';
-import { UserResponse } from '../users/types';
+import { UserResponse } from '../types';
 import { SmsResponse } from './types';
+import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
+import TokenService from '../token/token.service';
 
 const isDevTest =
   process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
@@ -48,21 +48,6 @@ const passMatch = async (entry: Password | OneTimePassword, password) => {
 
   return true;
 };
-function UnauthorizedHandler(): MethodDecorator {
-  return function (_, name, descriptor: PropertyDescriptor) {
-    const logger = new Logger(name as string);
-    const method = descriptor.value;
-
-    descriptor.value = async function (...args) {
-      try {
-        return await method.apply(this, args);
-      } catch (e) {
-        logger.error(e);
-        throw new UnauthorizedException();
-      }
-    };
-  };
-}
 
 @Injectable()
 export class AuthService {
@@ -71,9 +56,8 @@ export class AuthService {
     private smsService: SmsService,
     @InjectRepository(OneTimePassword)
     private otpRepository: Repository<OneTimePassword>,
-    private jwtService: JwtService,
+    private tokenService: TokenService,
   ) {}
-  private readonly logger = new Logger(AuthService.name);
 
   @UnauthorizedHandler()
   async verifyOTP(
@@ -92,7 +76,7 @@ export class AuthService {
 
     return {
       user,
-      token: await AuthGuard.getSignerPayload(user, this.jwtService),
+      token: await this.tokenService.getSignerPayload(user),
     };
   }
 

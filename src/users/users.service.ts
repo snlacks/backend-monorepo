@@ -2,7 +2,6 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
@@ -15,8 +14,7 @@ import { GuestKeysService } from '../guest-keys/guest-keys.service';
 import { addYears, formatISO } from 'date-fns';
 import { Password } from './password.entity';
 import { UpdatePasswordDTO } from './dto/update-password-dto';
-import { UserResponse } from './types';
-
+import { UserResponse } from '../types';
 export const hashPassword = (password: string, salt) =>
   new Promise<string>((resolve, reject) =>
     crypto.pbkdf2(password, salt, 1000, 64, `sha512`, (err, h) => {
@@ -35,7 +33,6 @@ export class UsersService {
     @InjectRepository(Password)
     private passwordRepository: Repository<Password>,
   ) {}
-  private readonly logger = new Logger(UsersService.name);
 
   async findAll(): Promise<User[] | undefined> {
     return this.usersRepository.find();
@@ -114,7 +111,6 @@ export class UsersService {
       });
       return result;
     } catch (error) {
-      this.logger.error(error);
       throw new HttpException('Unknown', HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }

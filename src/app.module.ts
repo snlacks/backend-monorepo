@@ -1,4 +1,4 @@
-import { ConsoleLogger, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -24,7 +24,7 @@ const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
 
 @Module({
   controllers: [AppController],
-  providers: [AppService, ConsoleLogger],
+  providers: [AppService],
   imports: [
     AiChatModule,
     AuthModule,

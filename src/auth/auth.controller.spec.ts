@@ -4,9 +4,8 @@ import { someToken } from './auth.mock';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { testUser } from '../_mock-data/user-data';
-import { jwtConfig } from '../_mock-data/jwt-config-data';
 import { UsersService } from '../users/users.service';
-import { AuthGuard } from './auth.guard';
+import TokenService from '../token/token.service';
 export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
   ({
     signIn: jest.fn(async () => ({
@@ -19,20 +18,23 @@ export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
   }) as unknown as AuthService;
 
 describe('AuthController', () => {
-  let jwtService: JwtService;
   let authService: AuthService;
   let usersService: UsersService;
+  let tokenService: TokenService;
   let controller: AuthController;
   let response: Response;
   let request: Request;
   beforeEach(() => {
-    jwtService = new JwtService(jwtConfig);
     authService = AuthServiceMock();
     usersService = {
       findAll: jest.fn(() => [testUser]),
       add: jest.fn(),
     } as any;
-    controller = new AuthController(authService, jwtService, usersService);
+    tokenService = new TokenService({
+      signAsync: jest.fn(() => 'fake'),
+      verifyAsync: jest.fn(() => ({})),
+    } as any as JwtService);
+    controller = new AuthController(authService, usersService, tokenService);
 
     response = {
       cookie: jest.fn(),
@@ -66,8 +68,8 @@ describe('AuthController', () => {
             throw 'Oops';
           },
         } as any,
-        jwtService,
         usersService,
+        tokenService,
       );
       await controller
         .requestOTP(testUser, response)
@@ -86,7 +88,7 @@ describe('AuthController', () => {
         response,
       );
       expect(response.cookie).toHaveBeenCalledWith(
-        AuthGuard.AUTHORIZATION_COOKIE_NAME,
+        TokenService.AUTHORIZATION_COOKIE_NAME,
         `Bearer ${someToken()}`,
         {
           httpOnly: true,

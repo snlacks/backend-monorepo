@@ -8,9 +8,10 @@ import {
   Index,
 } from 'typeorm';
 import { Role } from '../roles/role.entity';
+import { UserResponse } from '../types';
 
 @Entity()
-export class User {
+export class User implements UserResponse {
   @PrimaryGeneratedColumn('uuid')
   user_id: string;
 

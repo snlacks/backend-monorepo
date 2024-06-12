@@ -11,19 +11,15 @@ import {
   UsePipes,
   ValidationPipe,
   Put,
-  UnauthorizedException,
   Param,
   Delete,
-  Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDTO } from './dto/sign-in.dto';
 import { RequestOTPDTO } from '../one-time-password/dto/one-time-password.dto';
 import { Request, Response } from 'express';
-import { AuthGuard } from './auth.guard';
 import { Public } from '../users/public.decorator';
 import { User } from '../users/user.entity';
-import { JwtService } from '@nestjs/jwt';
 import { ForDevOnly } from './for-dev-only.decorator';
 import { ForDevOnlyGuard } from './for-dev-only.guard';
 import { UsersService } from '../users/users.service';
@@ -32,18 +28,18 @@ import { ROLE } from '../roles/roles';
 import { CreateUserDTO } from '../users/dto/create-user.dto';
 import { UpdatePasswordDTO } from '../users/dto/update-password-dto';
 import { SignInPasswordOnlyDto } from './dto/sign-in-password.dto';
-import { UserResponse } from '../users/types';
+import { UserResponse } from '../types';
 import { SmsResponse } from './types';
+import TokenService from '../token/token.service';
+import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private jwtService: JwtService,
     private usersService: UsersService,
+    private tokenService: TokenService,
   ) {}
-
-  logger = new Logger();
 
   @Get('/users')
   @Roles(ROLE.ADMIN)
@@ -60,27 +56,22 @@ export class AuthController {
     res.send(newUser);
   }
 
+  @UnauthorizedHandler()
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('/request-otp')
   async requestOTP(@Body() requestOTPDTO: RequestOTPDTO, @Res() res: Response) {
-    try {
-      const otpResponse = await this.authService.requestOTP(requestOTPDTO);
-      if ((otpResponse as User)?.user_id) {
-        await AuthGuard.setAuthorizationCookie(
-          otpResponse as User,
-          res,
-          this.jwtService,
-        );
-      }
-      res.status(201);
-      res.send(
-        otpResponse.hasOwnProperty('oneTimePassword') ? otpResponse : null,
+    const otpResponse = await this.authService.requestOTP(requestOTPDTO);
+    if ((otpResponse as User)?.user_id) {
+      await this.tokenService.setAuthorizationCookies(
+        otpResponse as User,
+        res.cookie,
       );
-    } catch (e) {
-      this.logger.log(e);
-      throw new UnauthorizedException();
     }
+    res.status(201);
+    res.send(
+      otpResponse.hasOwnProperty('oneTimePassword') ? otpResponse : null,
+    );
   }
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -91,8 +82,8 @@ export class AuthController {
       signInDto.one_time_password,
     );
     res.cookie(
-      AuthGuard.AUTHORIZATION_COOKIE_NAME,
-      AuthGuard.wrapCookie(token),
+      TokenService.AUTHORIZATION_COOKIE_NAME,
+      this.tokenService.wrapAuthCookie(token),
       {
         sameSite: 'strict',
         httpOnly: true,
@@ -102,6 +93,7 @@ export class AuthController {
     res.send(user);
   }
 
+  @UnauthorizedHandler()
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login-password')
@@ -112,33 +104,21 @@ export class AuthController {
   ) {
     let user: UserResponse | SmsResponse;
     try {
-      const { data: knownDevice } = await this.jwtService.verifyAsync(
-        req.cookies[AuthGuard.DEVICE_COOKIE_NAME],
-        {
-          secret: process.env.JWT_SECRET,
-        },
+      const { data: knownDevice } = await this.tokenService.verifyAsync(
+        req.cookies[TokenService.DEVICE_COOKIE_NAME],
       );
       user = await this.authService.loginPasswordOnly(signInDto, knownDevice);
     } catch (e) {
       user = await this.authService.loginPasswordOnly(signInDto);
     }
     if (!user) {
-      throw new UnauthorizedException();
+      throw 'no user';
     }
     if ((user as UserResponse)?.user_id) {
       res.status(200);
-      res.cookie(
-        AuthGuard.AUTHORIZATION_COOKIE_NAME,
-        AuthGuard.wrapCookie(
-          await AuthGuard.getSignerPayload(
-            user as UserResponse,
-            this.jwtService,
-          ),
-        ),
-        {
-          sameSite: 'strict',
-          httpOnly: true,
-        },
+      this.tokenService.setAuthorizationCookies(
+        user as UserResponse,
+        res.cookie,
       );
     }
 
@@ -157,9 +137,7 @@ export class AuthController {
   @UseGuards(ForDevOnlyGuard)
   @Post('/dev-token')
   async devToken(@Body() user: User, @Res() res: Response) {
-    res.send(
-      await AuthGuard.setAuthorizationCookie(user, res, this.jwtService),
-    );
+    res.send(await this.tokenService.setAuthorizationCookies(user, res.cookie));
   }
 
   @HttpCode(HttpStatus.OK)
@@ -172,7 +150,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('/sign-out')
   async signOut(@Res() res: Response) {
-    res.clearCookie(AuthGuard.AUTHORIZATION_COOKIE_NAME);
+    res.clearCookie(TokenService.AUTHORIZATION_COOKIE_NAME);
     res.send();
   }
 
