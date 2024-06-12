@@ -1,4 +1,4 @@
-![Coverage](https://raw.githubusercontent.com/wiki/snlacks/otp-auth-server/coverage.svg)
+![Coverage](https://raw.githubusercontent.com/wiki/snlacks/generative-ai-portal/coverage.svg)
 
 # Generative AI Portal - It likes to call itself Whispy
 
