@@ -7,7 +7,7 @@ import * as tokens from '../../_gmail_token.json';
 @Injectable()
 export default class ConnectService {
   getGmailService = async () => {
-    const { client_secret, client_id, redirect_uris } = credentials.web;
+    const { client_secret, client_id, redirect_uris } = credentials?.web;
     const oAuth2Client = new google.auth.OAuth2(
       client_id,
       client_secret,
