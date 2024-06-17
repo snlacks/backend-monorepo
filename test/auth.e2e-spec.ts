@@ -1,6 +1,6 @@
 import * as request from 'supertest';
-import { AuthGuard } from '../src/auth/auth.guard';
 import { AuthorizationCookie } from '../src/_mock-data/execution-context-data';
+import TokenService from '../src/token/token.service';
 
 const validPhone = '+15005550006';
 const host = 'http://localhost:3000';
@@ -47,21 +47,23 @@ describe('AuthController (e2e)', () => {
   afterEach(async () => {
     await request(host)
       .delete('/auth/users/' + newUserID)
-      .set('Cookie', [`${AuthGuard.AUTHORIZATION_COOKIE_NAME}=${adminCookie}`])
+      .set('Cookie', [
+        `${TokenService.AUTHORIZATION_COOKIE_NAME}=${adminCookie}`,
+      ])
       .catch(console.error);
   });
 
   it('SMS Request OTP - Dev Token -> Guest Key -> Create -> Request', async () => {
     const keyResponse = await request(host)
       .post('/guest-keys')
-      .set('Cookie', [`${AuthGuard.AUTHORIZATION_COOKIE_NAME}=${adminCookie}`])
+      .set('Cookie', [
+        `${TokenService.AUTHORIZATION_COOKIE_NAME}=${adminCookie}`,
+      ])
       .expect(201);
-
-    expect(keyResponse.body).toHaveProperty('guest_key_id');
 
     const userResponse = await request(host)
       .post('/auth/users')
-      .send({ ...createUserDto, guest_key_id: keyResponse.body.guest_key_id })
+      .send(createUserDto)
       .expect(201);
 
     newUserID = userResponse.body.user_id;
@@ -76,13 +78,13 @@ describe('AuthController (e2e)', () => {
     await request('http://localhost:3000')
       .post('/auth/sign-out')
       .set('Cookie', [
-        `${AuthGuard.AUTHORIZATION_COOKIE_NAME}=${AuthorizationCookie}`,
+        `${TokenService.AUTHORIZATION_COOKIE_NAME}=${AuthorizationCookie}`,
       ])
       .expect(200)
       .expect(
         'set-cookie',
         `${
-          AuthGuard.AUTHORIZATION_COOKIE_NAME
+          TokenService.AUTHORIZATION_COOKIE_NAME
         }=; Path=/; Expires=${epoch.toUTCString()}`,
       );
   });

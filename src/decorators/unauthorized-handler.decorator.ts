@@ -8,8 +8,7 @@ export function UnauthorizedHandler(): MethodDecorator {
     descriptor.value = async function (...args) {
       try {
         return await method.apply(this, args);
-      } catch (e) {
-        logger.error(e);
+      } catch {
         throw new UnauthorizedException();
       }
     };

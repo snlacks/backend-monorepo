@@ -34,5 +34,10 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
+
+_gmail_token.json
+_gmail_credential.json
+
 .env
 *.code.workspace
+_gmail_credentials.json

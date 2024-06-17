@@ -13,6 +13,7 @@ import {
   Put,
   Param,
   Delete,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDTO } from './dto/sign-in.dto';
@@ -31,9 +32,8 @@ import { SignInPasswordOnlyDto } from './dto/sign-in-password.dto';
 import { UserResponse } from '../types';
 import { SmsResponse } from './types';
 import TokenService from '../token/token.service';
-import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
 
-@Controller('auth')
+@Controller('/auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
@@ -56,44 +56,62 @@ export class AuthController {
     res.send(newUser);
   }
 
-  @UnauthorizedHandler()
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('/request-otp')
   async requestOTP(@Body() requestOTPDTO: RequestOTPDTO, @Res() res: Response) {
-    const otpResponse = await this.authService.requestOTP(requestOTPDTO);
-    if ((otpResponse as User)?.user_id) {
-      await this.tokenService.setAuthorizationCookies(
-        otpResponse as User,
-        res.cookie,
+    try {
+      const otpResponse = await this.authService.requestOTP(requestOTPDTO);
+      if ((otpResponse as User)?.user_id) {
+        const { token, device } =
+          await this.tokenService.getAuthorizationCookies(
+            otpResponse as UserResponse,
+          );
+        res.cookie(
+          TokenService.AUTHORIZATION_COOKIE_NAME,
+          token,
+          this.tokenService.authOptions(),
+        );
+        res.cookie(
+          TokenService.DEVICE_COOKIE_NAME,
+          device,
+          this.tokenService.deviceOptions(),
+        );
+      }
+      res.status(201);
+      res.send(
+        otpResponse.hasOwnProperty('oneTimePassword') ? otpResponse : null,
       );
+    } catch (e) {
+      throw new UnauthorizedException();
     }
-    res.status(201);
-    res.send(
-      otpResponse.hasOwnProperty('oneTimePassword') ? otpResponse : null,
-    );
   }
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(@Body() signInDto: SignInDTO, @Res() res: Response) {
-    const { user, token } = await this.authService.verifyOTP(
-      signInDto.username,
-      signInDto.one_time_password,
-    );
-    res.cookie(
-      TokenService.AUTHORIZATION_COOKIE_NAME,
-      this.tokenService.wrapAuthCookie(token),
-      {
+    try {
+      const { user, token, device } = await this.authService.verifyOTP(
+        signInDto.username,
+        signInDto.one_time_password,
+      );
+
+      res.cookie(TokenService.AUTHORIZATION_COOKIE_NAME, token, {
         sameSite: 'strict',
         httpOnly: true,
-      },
-    );
+      });
+      res.cookie(
+        TokenService.DEVICE_COOKIE_NAME,
+        device,
+        this.tokenService.deviceOptions(),
+      );
 
-    res.send(user);
+      res.send(user);
+    } catch {
+      throw new UnauthorizedException();
+    }
   }
 
-  @UnauthorizedHandler()
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login-password')
@@ -116,9 +134,18 @@ export class AuthController {
     }
     if ((user as UserResponse)?.user_id) {
       res.status(200);
-      this.tokenService.setAuthorizationCookies(
+      const { token, device } = await this.tokenService.getAuthorizationCookies(
         user as UserResponse,
-        res.cookie,
+      );
+      res.cookie(
+        TokenService.AUTHORIZATION_COOKIE_NAME,
+        token,
+        this.tokenService.authOptions(),
+      );
+      res.cookie(
+        TokenService.DEVICE_COOKIE_NAME,
+        device,
+        this.tokenService.deviceOptions(),
       );
     }
 
@@ -137,7 +164,19 @@ export class AuthController {
   @UseGuards(ForDevOnlyGuard)
   @Post('/dev-token')
   async devToken(@Body() user: User, @Res() res: Response) {
-    res.send(await this.tokenService.setAuthorizationCookies(user, res.cookie));
+    const { token, device } =
+      await this.tokenService.getAuthorizationCookies(user);
+    res.cookie(
+      TokenService.AUTHORIZATION_COOKIE_NAME,
+      token,
+      this.tokenService.authOptions(),
+    );
+    res.cookie(
+      TokenService.DEVICE_COOKIE_NAME,
+      device,
+      this.tokenService.deviceOptions(),
+    );
+    res.send(token);
   }
 
   @HttpCode(HttpStatus.OK)

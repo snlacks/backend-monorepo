@@ -48,7 +48,7 @@ describe('AuthGuard', () => {
     } as any;
   });
 
-  it.only('should succeed', async () => {
+  it('should succeed', async () => {
     jest.spyOn(tokenService, 'getPayload');
     await guard.canActivate(context as any).then((d) => {
       expect(d).toBe(true);

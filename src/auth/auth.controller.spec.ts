@@ -10,11 +10,16 @@ export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
   ({
     signIn: jest.fn(async () => ({
       user: testUser,
-      token: await new Promise<string>((resolve) => resolve(someToken())),
+      token: `Bearer ${someToken()}`,
+      device: someToken(),
     })),
     requestOTP: jest.fn(() => new Promise((resolve) => resolve('123456'))),
     ...props,
-    verifyOTP: jest.fn(() => ({ user: testUser, token: someToken() })),
+    verifyOTP: jest.fn(() => ({
+      user: testUser,
+      token: `Bearer ${someToken()}`,
+      device: someToken(),
+    })),
   }) as unknown as AuthService;
 
 describe('AuthController', () => {
@@ -31,7 +36,9 @@ describe('AuthController', () => {
       add: jest.fn(),
     } as any;
     tokenService = new TokenService({
-      signAsync: jest.fn(() => 'fake'),
+      signAsync: jest.fn(() => {
+        data: testUser;
+      }),
       verifyAsync: jest.fn(() => ({})),
     } as any as JwtService);
     controller = new AuthController(authService, usersService, tokenService);
@@ -78,8 +85,8 @@ describe('AuthController', () => {
       expect(authService.requestOTP).not.toHaveBeenCalled();
     });
   });
-  describe('#signin', () => {
-    it('should signin', async () => {
+  describe('#verifyOTP', () => {
+    it('should set two cookies', async () => {
       await controller.login(
         {
           username: testUser.username,
@@ -116,7 +123,7 @@ describe('AuthController', () => {
 
   describe('#addUser', () => {
     it('should add a user', async () => {
-      const createUser = { ...testUser, guest_key_id: 'some_guest_key' };
+      const createUser = { ...testUser };
       const userWithPassword = { ...createUser, password: '1Ba!@xowow' };
       expect(
         await controller.addUser(userWithPassword, response),

@@ -7,9 +7,16 @@ import { AuthGuard } from './auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
 import TokenModule from '../token/token.module';
+import MailModule from '../mail/mail.module';
 
 @Module({
-  imports: [UsersModule, OneTimePasswordModule, SmsModule, TokenModule],
+  imports: [
+    UsersModule,
+    OneTimePasswordModule,
+    SmsModule,
+    TokenModule,
+    MailModule,
+  ],
   providers: [
     AuthService,
     {

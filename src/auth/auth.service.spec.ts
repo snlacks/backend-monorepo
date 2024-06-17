@@ -8,12 +8,15 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/user.entity';
 import TokenService from '../token/token.service';
 import { someToken } from './auth.mock';
+import { sendServiceMock } from '../mail/send.service.mock';
+import SendService from '../mail/send.service';
 
 describe('AuthService', () => {
   let service: AuthService;
   let otpRepo: Repository<OneTimePassword>;
   let userService: UsersService;
   let smsService: SmsService;
+  let sendService: SendService;
 
   const _jwtService = {
     signAsync: jest.fn(someToken),
@@ -65,8 +68,16 @@ describe('AuthService', () => {
       findOne: jest.fn(() => testUserWithRoles),
     } as any;
 
+    sendService = sendServiceMock();
+
     tokenService = new TokenService(_jwtService);
-    service = new AuthService(userService, smsService, otpRepo, tokenService);
+    service = new AuthService(
+      userService,
+      smsService,
+      otpRepo,
+      tokenService,
+      sendService,
+    );
   });
 
   it('should be defined', () => {
@@ -94,6 +105,7 @@ describe('AuthService', () => {
         smsService,
         otpRepo,
         tokenService,
+        sendService,
       );
 
       await service
@@ -126,6 +138,7 @@ describe('AuthService', () => {
         new SmsService(),
         otpRepo,
         tokenService,
+        sendService,
       );
 
       await service
@@ -151,6 +164,7 @@ describe('AuthService', () => {
           }) as any,
         } as any,
         tokenService,
+        sendService,
       );
 
       await service

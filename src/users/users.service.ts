@@ -10,7 +10,6 @@ import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { Role } from '../roles/role.entity';
-import { GuestKeysService } from '../guest-keys/guest-keys.service';
 import { addYears, formatISO } from 'date-fns';
 import { Password } from './password.entity';
 import { UpdatePasswordDTO } from './dto/update-password-dto';
@@ -29,7 +28,6 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private guestKeysService: GuestKeysService,
     @InjectRepository(Password)
     private passwordRepository: Repository<Password>,
   ) {}
@@ -73,12 +71,8 @@ export class UsersService {
     );
   }
 
-  async add({ guest_key_id, ...user }: CreateUserDTO): Promise<UserResponse> {
+  async add(user: CreateUserDTO): Promise<UserResponse> {
     const { username } = user;
-    const key = await this.guestKeysService.findOne(guest_key_id);
-    if (!key) {
-      throw new UnauthorizedException('Invalid invitation');
-    }
     const existingUser = await this.usersRepository.findOneBy({ username });
     if (existingUser) {
       throw new HttpException(
@@ -88,8 +82,6 @@ export class UsersService {
     }
 
     try {
-      this.guestKeysService.remove(guest_key_id);
-
       const salt = crypto.randomBytes(16).toString('hex');
       const hash = await hashPassword(user.password, salt);
       const pDTO = {

@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { SmsModule } from './sms/sms.module';
 import RolesModule from './roles/roles.module';
 import AiChatModule from './ai-chat/ai-chat.module';
+import MailModule from './mail/mail.module';
 
 const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
   useFactory: () => ({
@@ -32,6 +33,7 @@ const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
     RolesModule,
     SmsModule,
     TypeOrmModuleForRoot,
+    MailModule,
   ],
 })
 export class AppModule {}

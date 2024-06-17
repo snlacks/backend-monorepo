@@ -24,19 +24,30 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 
-    const token = this.tokenService.extractTokenFromAuthCookie(request.cookies);
-    if (!token) {
+    const incomingToken = this.tokenService.extractTokenFromAuthCookie(
+      request.cookies,
+    );
+    if (!incomingToken) {
       throw '';
     }
-    const payload = await this.tokenService.getPayload(token);
+    const payload = await this.tokenService.getPayload(incomingToken);
     if (!payload || isAfter(new Date(), new Date(payload.exp * 1000))) {
       throw '';
     }
 
     request['user'] = payload.data;
-    await this.tokenService.setAuthorizationCookies(
+    const { token, device } = await this.tokenService.getAuthorizationCookies(
       payload.data,
-      response.cookie,
+    );
+    response.cookie(
+      TokenService.AUTHORIZATION_COOKIE_NAME,
+      token,
+      this.tokenService.authOptions(),
+    );
+    response.cookie(
+      TokenService.DEVICE_COOKIE_NAME,
+      device,
+      this.tokenService.deviceOptions(),
     );
     return true;
   }

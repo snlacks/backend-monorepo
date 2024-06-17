@@ -22,7 +22,4 @@ export class CreateUserDTO {
   })
   @IsNotEmpty()
   password: string;
-
-  @IsNotEmpty()
-  guest_key_id: string;
 }

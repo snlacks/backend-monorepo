@@ -17,6 +17,16 @@ import { UserResponse } from '../types';
 import { SmsResponse } from './types';
 import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
 import TokenService from '../token/token.service';
+import SendService from '../mail/send.service';
+
+const emaiLText = (oneTimePassword: string) => `
+Hello!
+
+The one-time passcode you requested is: ${oneTimePassword}.
+
+Thank you for using my app.
+
+For more information reply to this email.`;
 
 const isDevTest =
   process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
@@ -57,13 +67,14 @@ export class AuthService {
     @InjectRepository(OneTimePassword)
     private otpRepository: Repository<OneTimePassword>,
     private tokenService: TokenService,
+    private mailService: SendService,
   ) {}
 
   @UnauthorizedHandler()
   async verifyOTP(
     username: string,
     oneTimePassword: string,
-  ): Promise<{ user: User; token: string }> {
+  ): Promise<{ user: User; token: string; device: string }> {
     const user = await this.usersService.findOne(username);
     assert(user);
 
@@ -76,7 +87,7 @@ export class AuthService {
 
     return {
       user,
-      token: await this.tokenService.getSignerPayload(user),
+      ...(await this.tokenService.getAuthorizationCookies(user)),
     };
   }
 
@@ -84,39 +95,19 @@ export class AuthService {
   async loginPasswordOnly(
     userInfo: SignInPasswordOnlyDto,
     knownDevice?: string,
-  ): Promise<SmsResponse | UserResponse> {
+  ): Promise<any | UserResponse> {
     const user = await this.usersService.findOne(userInfo.username);
     const entry = await this.usersService.findPass(user.user_id);
 
     await passMatch(entry, userInfo.password);
 
     if (knownDevice !== user.user_id) {
-      return this.sendOtp(user);
+      return this.sendEmail(user.username);
     }
     return user;
   }
-
-  @UnauthorizedHandler()
-  async requestOTP(
-    userInfo: RequestOTPDTO,
-  ): Promise<string | User | SmsResponse> {
-    const user = await this.usersService.findOne(userInfo.username);
-
-    const phoneNumbers = serializePhone(
-      user.phone_number,
-      userInfo.phone_number,
-    );
-
-    assert(phoneNumbers[0] === phoneNumbers[1]);
-
-    const smsReponse = await this.sendOtp(user);
-
-    return isDevTest ? smsReponse : '';
-  }
-
-  @UnauthorizedHandler()
-  async sendOtp(user: UserResponse): Promise<SmsResponse> {
-    await this.otpRepository.delete({ username: user.username });
+  private async createOTP(username: string) {
+    await this.otpRepository.delete({ username: username });
 
     const oneTimePassword = generateOtp();
 
@@ -124,12 +115,48 @@ export class AuthService {
     const hash = await hashOTP(oneTimePassword, salt);
 
     await this.otpRepository.insert({
-      username: user.username,
+      username,
       hash,
       salt,
       expiration: formatISO(addMinutes(new Date(), 15)),
     });
+    return oneTimePassword;
+  }
 
+  @UnauthorizedHandler()
+  async requestOTP({
+    username,
+    phone_number,
+    method = 'sms',
+  }: RequestOTPDTO): Promise<string | any> {
+    const user = await this.usersService.findOne(username);
+
+    let codeResponse;
+    if (method === 'sms') {
+      const phoneNumbers = serializePhone(user.phone_number, phone_number);
+      assert(phoneNumbers[0] === phoneNumbers[1]);
+      codeResponse = await this.sendSms(user);
+    } else {
+      codeResponse = await this.sendEmail(user.username);
+    }
+    return isDevTest ? codeResponse : '';
+  }
+
+  @UnauthorizedHandler()
+  async sendEmail(username: string) {
+    const oneTimePassword = await this.createOTP(username);
+    const codeResponse = await this.mailService.send({
+      to: username,
+      subject: `StevenLacks.com code is: ${oneTimePassword}`,
+      text: emaiLText(oneTimePassword),
+      html: emaiLText(oneTimePassword),
+    });
+    return codeResponse;
+  }
+
+  @UnauthorizedHandler()
+  async sendSms(user: UserResponse): Promise<SmsResponse> {
+    const oneTimePassword = await this.createOTP(user.username);
     const smsResponse = await this.smsService.client.messages.create({
       body: `Your one-time passcode is ${oneTimePassword}`,
       from: process.env.ONE_TIME_PASSWORD_SMS_SENDER_NUMBER,
