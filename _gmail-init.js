@@ -1,16 +1,12 @@
 // Not part of app, run this locally to get tokens.
+const fs = require('fs').promises;
+const { authenticate } = require('@google-cloud/local-auth');
+const { google } = require('googleapis');
 
-import fs from 'fs/promises';
-import { authenticate } from '@google-cloud/local-auth';
-import { google } from 'googleapis';
+const path = require('path');
 
-import path from 'path';
-
-export const TOKEN_PATH = path.join(process.cwd(), '_gmail_token.json');
-export const CREDENTIALS_PATH = path.join(
-  process.cwd(),
-  '_gmail_credentials.json',
-);
+const TOKEN_PATH = path.join(process.cwd(), '_gmail_token.json');
+const CREDENTIALS_PATH = path.join(process.cwd(), '_gmail_credentials.json');
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
@@ -53,7 +49,7 @@ async function saveCredentials(client) {
  * Load or request or authorization to call APIs.
  *
  */
-export async function authorizeGmail() {
+async function authorizeGmail() {
   const client = await loadSavedCredentialsIfExist();
   if (client) {
     return client;
@@ -69,4 +65,4 @@ export async function authorizeGmail() {
   }
 }
 
-authorize().catch(console.error);
+authorizeGmail().catch(console.error);

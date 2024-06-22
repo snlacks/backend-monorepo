@@ -4,16 +4,19 @@ import * as MailComposer from 'nodemailer/lib/mail-composer';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 
-export const TOKEN_PATH = path.join(process.cwd(), '_gmail_token.json');
-export const CREDENTIALS_PATH = path.join(
-  process.cwd(),
-  '_gmail_credentials.json',
-);
-
 @Injectable()
 export default class ConnectService {
+  constructor() {
+    this.TOKEN_PATH = path.join(process.cwd(), process.env.GMAIL_TOKEN);
+    this.CREDENTIALS_PATH = path.join(
+      process.cwd(),
+      process.env.GMAIL_CREDENTIALS,
+    );
+  }
+  TOKEN_PATH: string;
+  CREDENTIALS_PATH: string;
   getGmailService = async () => {
-    const content = await fs.readFile(CREDENTIALS_PATH);
+    const content = await fs.readFile(this.CREDENTIALS_PATH);
     // @ts-expect-error runtime file, not present at build
     const credentials = JSON.parse(content);
     const { client_secret, client_id, redirect_uris } = credentials?.web;
@@ -23,7 +26,7 @@ export default class ConnectService {
       redirect_uris[0],
     );
 
-    const tokenContent = await fs.readFile(TOKEN_PATH);
+    const tokenContent = await fs.readFile(this.TOKEN_PATH);
     // @ts-expect-error runtime file, not present at build
     const tokens = JSON.parse(tokenContent);
     oAuth2Client.setCredentials(tokens);
@@ -47,11 +50,13 @@ export default class ConnectService {
   sendMail = async (options) => {
     const gmail = await this.getGmailService();
     const rawMessage = await this.createMail(options);
-    return gmail.users.messages.send({
-      userId: 'me',
-      resource: {
-        raw: rawMessage,
-      },
-    } as any);
+    return gmail.users.messages
+      .send({
+        userId: 'me',
+        resource: {
+          raw: rawMessage,
+        },
+      } as any)
+      .catch(console.error);
   };
 }

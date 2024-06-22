@@ -1,9 +1,6 @@
-import { Repository } from 'typeorm';
 import { SmsService } from '../sms/sms.module.mock';
 import { AuthService, hashOTP } from './auth.service';
-import { OneTimePassword } from '../one-time-password/one-time-password.entity';
 import { UsersService } from '../users/users.service';
-import { addYears } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/user.entity';
 import TokenService from '../token/token.service';
@@ -13,7 +10,6 @@ import SendService from '../mail/send.service';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let otpRepo: Repository<OneTimePassword>;
   let userService: UsersService;
   let smsService: SmsService;
   let sendService: SendService;
@@ -23,7 +19,7 @@ describe('AuthService', () => {
     verifyAsync: jest.fn(() => ({ data: testUser })),
   } as unknown as JwtService;
 
-  let tokenService;
+  let tokenService: TokenService;
 
   const testUser = {
     username: 'test@test.com',
@@ -37,31 +33,18 @@ describe('AuthService', () => {
   const testPass = '123456';
   const testSalt = 'salty';
   let testHash: string;
-  let otpEntity: OneTimePassword;
-  let expiredEntity: OneTimePassword;
+  let tokenOtp: string;
+  const wrappedForCookies = {
+    token: someToken(),
+    device: `Bearer ${someToken()}`,
+  };
 
   beforeAll(async () => {
     testHash = await hashOTP(testPass, testSalt);
-    otpEntity = {
-      username: testUser.username,
-      salt: testSalt,
-      hash: testHash,
-      expiration: addYears(new Date(), 1),
-    };
-    expiredEntity = {
-      ...otpEntity,
-      expiration: addYears(new Date(), -1),
-    };
+    tokenOtp = testHash;
   });
 
   beforeEach(async () => {
-    otpRepo = {
-      findOne: jest.fn(),
-      delete: jest.fn(),
-      insert: jest.fn(),
-      findOneBy: jest.fn(async () => otpEntity),
-    } as any;
-
     smsService = new SmsService();
 
     userService = {
@@ -70,11 +53,20 @@ describe('AuthService', () => {
 
     sendService = sendServiceMock();
 
-    tokenService = new TokenService(_jwtService);
+    tokenService = {
+      ...new TokenService(_jwtService),
+      getPayload: jest.fn(
+        () =>
+          ({
+            data: { hash: testHash, salt: testSalt },
+            exp: 9999999999,
+          }) as any,
+      ),
+      getAuthorizationCookies: jest.fn(() => wrappedForCookies) as any,
+    } as any;
     service = new AuthService(
       userService,
       smsService,
-      otpRepo,
       tokenService,
       sendService,
     );
@@ -86,24 +78,17 @@ describe('AuthService', () => {
   });
   describe('#requestOTP', () => {
     it('should request a one time password', async () => {
-      expect.assertions(4);
-      expect(await service.requestOTP(testUser)).toStrictEqual({
-        body: '',
-      });
+      expect.assertions(3);
+      const otpResponse = await service.requestOTP(testUser);
+      expect(otpResponse).toHaveProperty('body');
+      expect(otpResponse).toHaveProperty('oneTimePassword');
 
       expect(userService.findOne).toHaveBeenCalledWith(testUser.username);
-      expect(
-        (otpRepo.insert as jest.Mock).mock.calls[0][0].username,
-      ).toStrictEqual(testUser.username);
-      expect(
-        Object.keys((otpRepo.insert as jest.Mock).mock.calls[0][0]),
-      ).toStrictEqual(['username', 'hash', 'salt', 'expiration']);
     });
     it('should throw when wrong user', async () => {
       service = new AuthService(
         { ...userService, findOne: () => undefined } as any,
         smsService,
-        otpRepo,
         tokenService,
         sendService,
       );
@@ -118,63 +103,42 @@ describe('AuthService', () => {
 
   describe('#signIn', () => {
     it('should sign in', async () => {
-      await service
-        .verifyOTP(testUser.username, testPass)
-        .then((d) => expect(d.token.length).toBeGreaterThan(150));
+      await service.verifyOTP(testUser.username, tokenOtp, testPass).then((d) =>
+        expect(d).toStrictEqual({
+          user: testUserWithRoles,
+          ...wrappedForCookies,
+        }),
+      );
     });
 
     it('should throw when wrong password', async () => {
       expect.assertions(1);
-      await service.verifyOTP(testUser.username, 'wrongpass').catch((e) => {
+      await service
+        .verifyOTP(testUser.username, tokenOtp, 'wrongpass')
+        .catch((e) => {
+          expect(e.message).toBe('Unauthorized');
+        });
+    });
+  });
+
+  it('should throw when no user', async () => {
+    expect.assertions(1);
+
+    service = new AuthService(
+      { ...userService, findOne: () => undefined } as any,
+      new SmsService(),
+      tokenService,
+      sendService,
+    );
+
+    await service
+      .verifyOTP(
+        'notauser', // this is demonstrative, the service throws an error because UserService returns undefind
+        tokenOtp,
+        testPass,
+      )
+      .catch((e) => {
         expect(e.message).toBe('Unauthorized');
       });
-    });
-
-    it('should throw when no user', async () => {
-      expect.assertions(1);
-
-      service = new AuthService(
-        { ...userService, findOne: () => undefined } as any,
-        new SmsService(),
-        otpRepo,
-        tokenService,
-        sendService,
-      );
-
-      await service
-        .verifyOTP(
-          'notauser', // this is demonstrative, the service throws an error because UserService returns undefind
-          testPass,
-        )
-        .catch((e) => {
-          expect(e.message).toBe('Unauthorized');
-        });
-    });
-
-    it('should throw when no user', async () => {
-      expect.assertions(1);
-
-      service = new AuthService(
-        userService,
-        new SmsService(),
-        {
-          ...otpRepo,
-          findOneBy: jest.fn(async () => {
-            return expiredEntity;
-          }) as any,
-        } as any,
-        tokenService,
-        sendService,
-      );
-
-      await service
-        .verifyOTP(
-          'notauser', // this is demonstrative, the service throws an error because UserService returns undefind
-          testPass,
-        )
-        .catch((e) => {
-          expect(e.message).toBe('Unauthorized');
-        });
-    });
   });
 });

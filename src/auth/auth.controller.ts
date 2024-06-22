@@ -17,7 +17,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDTO } from './dto/sign-in.dto';
-import { RequestOTPDTO } from '../one-time-password/dto/one-time-password.dto';
+import { RequestOTPDTO } from './dto/one-time-password.dto';
 import { Request, Response } from 'express';
 import { Public } from '../users/public.decorator';
 import { User } from '../users/user.entity';
@@ -30,8 +30,11 @@ import { CreateUserDTO } from '../users/dto/create-user.dto';
 import { UpdatePasswordDTO } from '../users/dto/update-password-dto';
 import { SignInPasswordDto } from './dto/sign-in-password.dto';
 import { UserResponse } from '../types';
-import { SmsResponse } from './types';
+import { HasOneTimePassword } from './types';
 import TokenService from '../token/token.service';
+
+const isDevTest =
+  process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 
 @Controller('/auth')
 export class AuthController {
@@ -62,26 +65,13 @@ export class AuthController {
   async requestOTP(@Body() requestOTPDTO: RequestOTPDTO, @Res() res: Response) {
     try {
       const otpResponse = await this.authService.requestOTP(requestOTPDTO);
-      if ((otpResponse as User)?.user_id) {
-        const { token, device } =
-          await this.tokenService.getAuthorizationCookies(
-            otpResponse as UserResponse,
-          );
-        res.cookie(
-          TokenService.AUTHORIZATION_COOKIE_NAME,
-          token,
-          this.tokenService.authOptions(),
-        );
-        res.cookie(
-          TokenService.DEVICE_COOKIE_NAME,
-          device,
-          this.tokenService.deviceOptions(),
-        );
-      }
-      res.status(201);
-      res.send(
-        otpResponse.hasOwnProperty('oneTimePassword') ? otpResponse : null,
+      res.cookie(
+        TokenService.LOGIN_NAME,
+        await this.tokenService.getLoginCookie(otpResponse.oneTimePassword),
+        this.tokenService.otpOptions(),
       );
+      res.status(201);
+      res.send(isDevTest ? otpResponse : null);
     } catch (e) {
       throw new UnauthorizedException();
     }
@@ -89,10 +79,15 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  async login(@Body() signInDto: SignInDTO, @Res() res: Response) {
+  async login(
+    @Body() signInDto: SignInDTO,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
     try {
       const { user, token, device } = await this.authService.verifyOTP(
         signInDto.username,
+        req.cookies[TokenService.LOGIN_NAME],
         signInDto.one_time_password,
       );
 
@@ -107,7 +102,7 @@ export class AuthController {
       );
 
       res.send(user);
-    } catch {
+    } catch (e) {
       throw new UnauthorizedException();
     }
   }
@@ -120,20 +115,16 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    let user: UserResponse | SmsResponse;
+    let user: UserResponse | HasOneTimePassword;
     try {
       const { data: knownDevice } = await this.tokenService.verifyAsync(
         req.cookies[TokenService.DEVICE_COOKIE_NAME],
       );
-      user = await this.authService.loginPasswordOnly(signInDto, knownDevice);
-    } catch (e) {
-      user = await this.authService.loginPasswordOnly(signInDto);
-    }
-    if (!user) {
-      throw 'no user';
-    }
-    if ((user as UserResponse)?.user_id) {
-      res.status(200);
+      user = (await this.authService.loginPasswordOnly(
+        signInDto,
+        knownDevice,
+      )) as UserResponse;
+
       const { token, device } = await this.tokenService.getAuthorizationCookies(
         user as UserResponse,
       );
@@ -147,8 +138,16 @@ export class AuthController {
         device,
         this.tokenService.deviceOptions(),
       );
+    } catch (e) {
+      user = (await this.authService.loginPasswordOnly(
+        signInDto,
+      )) as HasOneTimePassword;
+      res.cookie(
+        TokenService.LOGIN_NAME,
+        await this.tokenService.getLoginCookie(user.oneTimePassword),
+        this.tokenService.otpOptions(),
+      );
     }
-
     return res.send(user);
   }
 

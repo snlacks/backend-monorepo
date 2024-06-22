@@ -12,17 +12,17 @@ export default class SendService {
     subject,
     html,
     to,
-    replyTo = 'info@stevenlacks.com',
+    from = 'Info <info@stevenlacks.com>',
   }: {
     text: string;
     subject: string;
     html: string;
     to: string;
-    replyTo?: string;
+    from?: string;
   }) => {
     const options = {
       to,
-      replyTo,
+      from,
       subject,
       text,
       html,

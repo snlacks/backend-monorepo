@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { addDays } from 'date-fns';
+import { addDays, addMinutes } from 'date-fns';
 import { Cookies } from './types';
 import { UserResponse } from '../types';
 import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
 import { CookieOptions } from 'express';
+import { HasOneTimePassword } from '../auth/types';
 
 const prefix = 'Bearer\u0020';
 
@@ -38,6 +39,11 @@ export default class TokenService {
     return { token: this.wrapAuthCookie(unwrapped), device };
   }
 
+  getLoginCookie = (oneTimePassword: HasOneTimePassword['oneTimePassword']) =>
+    this.jwtService.signAsync({
+      data: { hash: oneTimePassword.hash, salt: oneTimePassword.salt },
+    });
+
   @UnauthorizedHandler()
   async verifyAsync(token) {
     return await this.jwtService.verifyAsync(token, {
@@ -59,6 +65,13 @@ export default class TokenService {
       httpOnly: true,
     }) as CookieOptions;
 
+  otpOptions = () =>
+    ({
+      sameSite: 'strict',
+      httpOnly: true,
+      expires: addMinutes(new Date(), 15),
+    }) as CookieOptions;
+
   deviceOptions = () =>
     ({
       expires: addDays(new Date(), 30),
@@ -67,4 +80,5 @@ export default class TokenService {
 
   static AUTHORIZATION_COOKIE_NAME = 'Authorization';
   static DEVICE_COOKIE_NAME = 'KnownDevice';
+  static LOGIN_NAME = 'Login';
 }

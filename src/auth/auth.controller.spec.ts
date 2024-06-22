@@ -14,7 +14,16 @@ export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
       token: `Bearer ${someToken()}`,
       device: someToken(),
     })),
-    requestOTP: jest.fn(() => new Promise((resolve) => resolve('123456'))),
+    requestOTP: jest.fn(
+      () =>
+        new Promise((resolve) =>
+          resolve({
+            oneTimePassword: '123456',
+            hash: 'some_hash',
+            salt: 'some_salt',
+          }),
+        ),
+    ),
     ...props,
     verifyOTP: jest.fn(() => ({
       user: testUser,
@@ -60,7 +69,6 @@ describe('AuthController', () => {
   });
   describe('#requestOTP', () => {
     it('should get a one time password', async () => {
-      expect.assertions(2);
       await controller.requestOTP(testUser, response).then((d) => {
         expect(d).toBeUndefined();
         expect(authService.requestOTP).toHaveBeenCalledWith(testUser);
@@ -94,6 +102,7 @@ describe('AuthController', () => {
           one_time_password: '123456',
         },
         response,
+        request,
       );
       expect(response.cookie).toHaveBeenCalledWith(
         TokenService.AUTHORIZATION_COOKIE_NAME,
