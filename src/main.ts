@@ -14,6 +14,7 @@ async function bootstrap() {
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.enableCors({
+    origin: ['https://demo.stevenlacks.com', 'https://id.stevenlacks.com'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
