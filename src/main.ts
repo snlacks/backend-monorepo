@@ -3,7 +3,6 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { useContainer } from 'typeorm';
 import * as cookieParser from 'cookie-parser';
-import * as cors from 'cors';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -15,11 +14,15 @@ async function bootstrap() {
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const corsOptions = {
-    origin:
-      process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3001'
-        : 'https://demo.stevenlacks.com',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    origin: function (origin, callback) {
+      const match = [
+        'http://localhost:3001',
+        'https://demo.stevenlacks.com',
+      ].includes(origin);
+      callback(null, match);
+    },
+    allowedHeaders: ['content-type', 'access-control-allow-origin'],
     credentials: true,
   };
   app.enableCors(corsOptions);
