@@ -235,8 +235,10 @@ describe('AuthController', () => {
   describe('#signOut', () => {
     it('should add a user', async () => {
       expect(await controller.signOut(response)).toBeUndefined();
-      expect(response.clearCookie).toHaveBeenCalledWith(
+      expect(response.cookie).toHaveBeenCalledWith(
         TokenService.AUTHORIZATION_COOKIE_NAME,
+        '',
+        expect.anything(),
       );
     });
   });
