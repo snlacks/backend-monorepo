@@ -18,7 +18,7 @@ async function bootstrap() {
     origin:
       process.env.NODE_ENV === 'development'
         ? 'http://localhost:3001'
-        : ['https://demo.stevenlacks.com'],
+        : 'https://demo.stevenlacks.com',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   };
