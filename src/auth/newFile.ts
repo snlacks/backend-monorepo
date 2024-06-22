@@ -6,42 +6,7 @@ import { Request, Response } from 'express';
 import { testUser } from '../_mock-data/user-data';
 import { UsersService } from '../users/users.service';
 import TokenService from '../token/token.service';
-
-export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
-  ({
-    signIn: jest.fn(async () => ({
-      user: testUser,
-      token: `Bearer ${someToken()}`,
-      device: someToken(),
-    })),
-    requestOTP: jest.fn(
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            oneTimePassword: {
-              oneTimePassword: '123456',
-              hash: 'some_hash',
-              salt: 'some_salt',
-            },
-          }),
-        ),
-    ),
-    loginPasswordOnly: jest.fn(() => {
-      return {
-        oneTimePassword: {
-          oneTimePassword: '123456',
-          hash: 'some_hash',
-          salt: 'some_salt',
-        },
-      };
-    }),
-    verifyOTP: jest.fn(() => ({
-      user: testUser,
-      token: `Bearer ${someToken()}`,
-      device: 'some_user_id',
-    })),
-    ...props,
-  }) as unknown as AuthService;
+import { AuthServiceMock } from './auth.controller.spec';
 
 describe('AuthController', () => {
   let authService: AuthService;
@@ -55,8 +20,6 @@ describe('AuthController', () => {
     usersService = {
       findAll: jest.fn(() => [testUser]),
       add: jest.fn(),
-      remove: jest.fn(),
-      changePassword: jest.fn(),
     } as any;
     tokenService = new TokenService({
       signAsync: jest.fn(() => ({
@@ -70,7 +33,6 @@ describe('AuthController', () => {
       cookie: jest.fn(),
       send: jest.fn(),
       status: jest.fn(),
-      clearCookie: jest.fn(),
     } as any;
     request = {
       cookies: {
@@ -148,30 +110,7 @@ describe('AuthController', () => {
       );
     });
     it('should login on known device', async () => {
-      controller = new AuthController(
-        {
-          ...authService,
-          loginPasswordOnly: jest.fn(() => ({
-            ...testUser,
-            user_id: 'some_user_id',
-          })),
-        } as any,
-        usersService,
-        {
-          ...tokenService,
-          verifyAsync: jest.fn(() => {
-            return { data: 'some_user_id' };
-          }),
-          getAuthorizationCookies: jest.fn(() => {
-            return new Promise((resolve) =>
-              resolve({
-                token: `Bearer ${someToken()}`,
-                device: someToken(),
-              }),
-            );
-          }),
-        } as any,
-      );
+      controller = new AuthController();
       await controller.loginPassword(
         {
           username: testUser.username,
@@ -179,19 +118,14 @@ describe('AuthController', () => {
         },
         {
           cookies: {
-            KnownDevice: someToken(),
+            [TokenService.DEVICE_COOKIE_NAME]: someToken(),
           },
           user: testUser,
         } as any as Request,
         response,
       );
       expect(response.cookie).toHaveBeenCalledWith(
-        TokenService.AUTHORIZATION_COOKIE_NAME,
-        expect.anything(),
-        expect.anything(),
-      );
-      expect(response.cookie).toHaveBeenCalledWith(
-        TokenService.DEVICE_COOKIE_NAME,
+        TokenService.LOGIN_NAME,
         expect.anything(),
         expect.anything(),
       );
@@ -230,39 +164,6 @@ describe('AuthController', () => {
       const tokenUser = { ...testUser, roles: [], user_id: '1234567' };
       expect(await controller.devToken(tokenUser, response)).toBeUndefined();
       expect(response.send).toHaveBeenCalled();
-    });
-  });
-  describe('#signOut', () => {
-    it('should add a user', async () => {
-      expect(await controller.signOut(response)).toBeUndefined();
-      expect(response.clearCookie).toHaveBeenCalledWith(
-        TokenService.AUTHORIZATION_COOKIE_NAME,
-      );
-    });
-  });
-  describe('#removeUser', () => {
-    it('should add a user', async () => {
-      expect(
-        await controller.removeUser({ id: 'some_user_id' }, response),
-      ).toBeUndefined();
-      expect(usersService.remove).toHaveBeenCalledWith('some_user_id');
-    });
-  });
-  describe('#updatePassword', () => {
-    it('should add a user', async () => {
-      const dto = {
-        username: testUser.username,
-        old_password: 'old_pass',
-        new_password: 'new_pass',
-      };
-      expect(
-        await controller.updatePassword({
-          username: testUser.username,
-          old_password: 'old_pass',
-          new_password: 'new_pass',
-        }),
-      ).toBeUndefined();
-      expect(usersService.changePassword).toHaveBeenCalledWith(dto);
     });
   });
 });

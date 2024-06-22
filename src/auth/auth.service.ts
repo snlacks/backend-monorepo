@@ -82,16 +82,12 @@ export class AuthService {
   @UnauthorizedHandler()
   async loginPasswordOnly(
     userInfo: SignInPasswordDto,
-    knownDevice?: string,
   ): Promise<UserResponse | HasOneTimePassword> {
     const user = await this.usersService.findOne(userInfo.username);
     const entry = await this.usersService.findPass(user.user_id);
 
     await passMatch(entry, userInfo.password);
 
-    if (knownDevice !== user.user_id) {
-      return this.sendEmail(user.username);
-    }
     return user;
   }
   private async createOTP() {

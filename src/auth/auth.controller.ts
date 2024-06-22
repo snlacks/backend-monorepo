@@ -21,8 +21,6 @@ import { RequestOTPDTO } from './dto/one-time-password.dto';
 import { Request, Response } from 'express';
 import { Public } from '../users/public.decorator';
 import { User } from '../users/user.entity';
-import { ForDevOnly } from './for-dev-only.decorator';
-import { ForDevOnlyGuard } from './for-dev-only.guard';
 import { UsersService } from '../users/users.service';
 import { Roles } from '../roles/roles.decorator';
 import { ROLE } from '../roles/roles';
@@ -32,6 +30,7 @@ import { SignInPasswordDto } from './dto/sign-in-password.dto';
 import { UserResponse } from '../types';
 import { HasOneTimePassword } from './types';
 import TokenService from '../token/token.service';
+import * as assert from 'assert';
 
 const isDevTest =
   process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
@@ -81,8 +80,8 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() signInDto: SignInDTO,
-    @Res() res: Response,
     @Req() req: Request,
+    @Res() res: Response,
   ) {
     try {
       const { user, token, device } = await this.authService.verifyOTP(
@@ -122,12 +121,15 @@ export class AuthController {
       );
       user = (await this.authService.loginPasswordOnly(
         signInDto,
-        knownDevice,
       )) as UserResponse;
+
+      assert(knownDevice);
+      assert(knownDevice === user.user_id);
 
       const { token, device } = await this.tokenService.getAuthorizationCookies(
         user as UserResponse,
       );
+
       res.cookie(
         TokenService.AUTHORIZATION_COOKIE_NAME,
         token,
@@ -158,10 +160,14 @@ export class AuthController {
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ForDevOnly()
-  @UseGuards(ForDevOnlyGuard)
   @Post('/dev-token')
   async devToken(@Body() user: User, @Res() res: Response) {
+    if (
+      process.env.NODE_ENV !== 'development' &&
+      process.env.NODE_ENV !== 'test'
+    ) {
+      return;
+    }
     const { token, device } =
       await this.tokenService.getAuthorizationCookies(user);
     res.cookie(
