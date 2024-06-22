@@ -14,7 +14,7 @@ export const CREDENTIALS_PATH = path.join(
 export default class ConnectService {
   getGmailService = async () => {
     const content = await fs.readFile(CREDENTIALS_PATH);
-    // @ts-ignore
+    // @ts-expect-error runtime file, not present at build
     const credentials = JSON.parse(content);
     const { client_secret, client_id, redirect_uris } = credentials?.web;
     const oAuth2Client = new google.auth.OAuth2(
@@ -24,7 +24,7 @@ export default class ConnectService {
     );
 
     const tokenContent = await fs.readFile(TOKEN_PATH);
-    // @ts-ignore
+    // @ts-expect-error runtime file, not present at build
     const tokens = JSON.parse(tokenContent);
     oAuth2Client.setCredentials(tokens);
     const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });

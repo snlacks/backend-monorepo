@@ -28,7 +28,7 @@ import { Roles } from '../roles/roles.decorator';
 import { ROLE } from '../roles/roles';
 import { CreateUserDTO } from '../users/dto/create-user.dto';
 import { UpdatePasswordDTO } from '../users/dto/update-password-dto';
-import { SignInPasswordOnlyDto } from './dto/sign-in-password.dto';
+import { SignInPasswordDto } from './dto/sign-in-password.dto';
 import { UserResponse } from '../types';
 import { SmsResponse } from './types';
 import TokenService from '../token/token.service';
@@ -43,8 +43,8 @@ export class AuthController {
 
   @Get('/users')
   @Roles(ROLE.ADMIN)
-  getUsers() {
-    return this.usersService.findAll();
+  async getUsers(): Promise<User[]> {
+    return await this.usersService.findAll();
   }
 
   @Post('/users')
@@ -116,7 +116,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login-password')
   async loginPassword(
-    @Body() signInDto: SignInPasswordOnlyDto,
+    @Body() signInDto: SignInPasswordDto,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -153,9 +153,8 @@ export class AuthController {
   }
 
   @Put('/users/password')
-  @Roles(ROLE.ADMIN)
-  updatePassword(dto: UpdatePasswordDTO) {
-    return this.usersService.updatePassword(dto);
+  updatePassword(@Body() dto: UpdatePasswordDTO) {
+    return this.usersService.changePassword(dto);
   }
 
   @Public()
@@ -194,7 +193,7 @@ export class AuthController {
   }
 
   @Roles(ROLE.ADMIN)
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   @Delete('/users/:id')
   async removeUser(@Param() params: { id: string }, @Res() res: Response) {
     await this.usersService.remove(params.id);

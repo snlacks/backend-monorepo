@@ -4,7 +4,6 @@ import { IS_PUBLIC_KEY } from '../users/public.decorator';
 import { isAfter } from 'date-fns';
 import TokenService from '../token/token.service';
 import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
-
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(

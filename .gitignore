@@ -36,8 +36,10 @@ lerna-debug.log*
 
 
 _gmail_token.json
-_gmail_credential.json
+_gmail_credentials.json
 
 .env
 *.code.workspace
-_gmail_credentials.json
+
+#swagger/openapi
+/documentation

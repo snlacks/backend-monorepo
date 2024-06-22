@@ -53,14 +53,7 @@ describe('AuthController (e2e)', () => {
       .catch(console.error);
   });
 
-  it('SMS Request OTP - Dev Token -> Guest Key -> Create -> Request', async () => {
-    const keyResponse = await request(host)
-      .post('/guest-keys')
-      .set('Cookie', [
-        `${TokenService.AUTHORIZATION_COOKIE_NAME}=${adminCookie}`,
-      ])
-      .expect(201);
-
+  it('SMS Request OTP - Dev Token -> Create -> Request', async () => {
     const userResponse = await request(host)
       .post('/auth/users')
       .send(createUserDto)

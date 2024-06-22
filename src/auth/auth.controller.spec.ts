@@ -6,6 +6,7 @@ import { Request, Response } from 'express';
 import { testUser } from '../_mock-data/user-data';
 import { UsersService } from '../users/users.service';
 import TokenService from '../token/token.service';
+
 export const AuthServiceMock = (props: Partial<AuthService> = {}) =>
   ({
     signIn: jest.fn(async () => ({

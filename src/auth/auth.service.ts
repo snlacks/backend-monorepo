@@ -4,7 +4,7 @@ import * as otpGenerator from 'otp-generator';
 import { formatISO, addMinutes, isBefore } from 'date-fns';
 import { Injectable } from '@nestjs/common';
 
-import { UsersService } from '../users/users.service';
+import { UsersService, hashPassword } from '../users/users.service';
 import { OneTimePassword } from '../one-time-password/one-time-password.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,12 +12,13 @@ import { SmsService } from '../sms/sms.service';
 import { User } from '../users/user.entity';
 import { RequestOTPDTO } from '../one-time-password/dto/one-time-password.dto';
 import { Password } from '../users/password.entity';
-import { SignInPasswordOnlyDto } from './dto/sign-in-password.dto';
+import { SignInPasswordDto } from './dto/sign-in-password.dto';
 import { UserResponse } from '../types';
 import { SmsResponse } from './types';
 import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
 import TokenService from '../token/token.service';
 import SendService from '../mail/send.service';
+import { ResetPasswordDTO } from './dto/reset-password-dto';
 
 const emaiLText = (oneTimePassword: string) => `
 Hello!
@@ -93,7 +94,7 @@ export class AuthService {
 
   @UnauthorizedHandler()
   async loginPasswordOnly(
-    userInfo: SignInPasswordOnlyDto,
+    userInfo: SignInPasswordDto,
     knownDevice?: string,
   ): Promise<any | UserResponse> {
     const user = await this.usersService.findOne(userInfo.username);
@@ -167,5 +168,21 @@ export class AuthService {
     return {
       body: smsResponse?.body.replace(/\d{6}/, '######'),
     };
+  }
+
+  @UnauthorizedHandler()
+  async passwordReset({
+    username,
+    one_time_password,
+    new_password,
+  }: ResetPasswordDTO) {
+    const { user_id } = await this.usersService.findOne(username);
+    const entry = await this.otpRepository.findOneBy({ username });
+    const oldHash = await hashPassword(one_time_password, entry.salt);
+
+    if (oldHash !== entry.hash) {
+      throw 'Passwords do not match';
+    }
+    await this.usersService.updatePassword(user_id, new_password);
   }
 }

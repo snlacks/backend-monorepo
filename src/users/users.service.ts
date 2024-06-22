@@ -14,6 +14,7 @@ import { addYears, formatISO } from 'date-fns';
 import { Password } from './password.entity';
 import { UpdatePasswordDTO } from './dto/update-password-dto';
 import { UserResponse } from '../types';
+
 export const hashPassword = (password: string, salt) =>
   new Promise<string>((resolve, reject) =>
     crypto.pbkdf2(password, salt, 1000, 64, `sha512`, (err, h) => {
@@ -43,7 +44,7 @@ export class UsersService {
   async findPass(user_id: string) {
     return this.passwordRepository.findOneBy({ user_id });
   }
-  async updatePassword({
+  async changePassword({
     username,
     old_password,
     new_password,
@@ -57,11 +58,15 @@ export class UsersService {
     if (oldHash !== entry.hash) {
       throw new UnauthorizedException();
     }
+    await this.updatePassword(user_id, new_password);
+  }
+
+  async updatePassword(userId: string, newPassword: string) {
     const salt = crypto.randomBytes(16).toString('hex');
-    const hash = await hashPassword(new_password, salt);
-    await this.passwordRepository.update(
+    const hash = await hashPassword(newPassword, salt);
+    return await this.passwordRepository.update(
       {
-        user_id: user_id,
+        user_id: userId,
       },
       {
         hash,

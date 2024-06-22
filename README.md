@@ -10,6 +10,8 @@ PLEASE don't just pull this and try to run this for your production server. Plea
 
 To get this running:
 
+**Requires environmental variables**
+
 ```bash
 DB_USERNAME=*
 DB_PASSWORD=*
@@ -22,15 +24,20 @@ JWT_EXPIRES=*
 OLLAMA_URI=*
 ```
 
-POST /auth/request-otp accepts password or phone number. If password and known device,
-POST /auth/login
-POST /auth/refresh (protected, self - returns user, updates token expire)
-POST /auth/dev-token (protected, dev only)
-POST /auth/sign-out (remove HTTP only cookie if it exists)
-GET /auth/users (protected, role Admin)
-POST /auth/users (reqires guest key, to limit public access)
-PUT /auth/users/password
-POST /ai-chat/chat-stream/
+**Requires token and credentials files in root for gmail client**
+_gmail_\*.json
+
+/auth/users, GET
+/auth/users, POST
+/auth/request-otp, POST
+/auth/login, POST
+/auth/login-password, POST
+/auth/users/password, PUT
+/auth/dev-token, POST
+/auth/refresh, POST
+/auth/sign-out, POST
+/auth/users/:id, DELETE
+/mail/healthcheck, POST
 
 It uses external dependencies (each has a module): Ollama webservice, Twillio, and MySql. Because they're in OO/Nest Modules they should be really easy to replace with other external services.
 
