@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { useContainer } from 'typeorm';
 import * as cookieParser from 'cookie-parser';
+import * as cors from 'cors';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -13,11 +14,15 @@ async function bootstrap() {
   });
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
-  app.enableCors({
-    origin: ['https://demo.stevenlacks.com', 'https://id.stevenlacks.com'],
+  const corsOptions = {
+    origin:
+      process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3001'
+        : ['https://demo.stevenlacks.com'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-  });
+  };
+  app.enableCors(corsOptions);
   app.useGlobalPipes(
     new ValidationPipe({
       disableErrorMessages: process.env.NODE_ENV === 'production',
