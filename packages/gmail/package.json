@@ -1,7 +1,6 @@
 {
   "name": "@snlacks/gmail",
   "peerDependencies": {
-    "typescript": "^5.1.3",
     "@nestjs/common": "^10.3.9",
     "@nestjs/jwt": "^10.2.0",
     "express": "^4.19.2",

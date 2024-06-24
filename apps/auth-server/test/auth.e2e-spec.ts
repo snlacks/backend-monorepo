@@ -1,10 +1,9 @@
 import * as request from "supertest";
-import { AuthorizationCookie } from "../src/_mock-data/execution-context-data";
+import { AuthorizationCookie } from "@snlacks/auth/src/_mock-data/execution-context-data";
 import { TokenService } from "@snlacks/token";
 
 const validPhone = "+15005550006";
 const host = "http://localhost:3000";
-const epoch = new Date(0);
 const adminUser = {
   user_id: "some_id",
   username: "fake@email.com",
@@ -76,7 +75,7 @@ describe("AuthController (e2e)", () => {
       .expect(200)
       .expect(
         "set-cookie",
-        "Authorization=; Domain=localhost; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict"
+        "Authorization=; Domain=localhost; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict",
       );
   });
 });

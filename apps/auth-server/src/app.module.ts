@@ -1,13 +1,12 @@
 import { Module } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { AuthModule } from "./auth/auth.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule } from "@nestjs/config";
-import { SmsModule } from "./sms/sms.module";
-import RolesModule from "./roles/roles.module";
-import AiChatModule from "./ai-chat/ai-chat.module";
-import { MailModule } from "@snlacks/gmail";
+import { MailModule, SendService } from "@snlacks/gmail";
+import { AiChatModule } from "@snlacks/ai-chat";
+import { AuthModule, RolesModule } from "@snlacks/auth";
+import { SmsService } from "@snlacks/twilio";
 import { checkEnv } from "./checkEnv";
 
 const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
@@ -15,7 +14,7 @@ const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
     ["DB_HOST", "DB_PORT", "DB_USERNAME", "DB_PASSWORD", "DB_DATABASE"].forEach(
       (el) => {
         checkEnv(el);
-      }
+      },
     );
     return {
       type: "mysql",
@@ -36,10 +35,9 @@ const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
   providers: [AppService],
   imports: [
     AiChatModule,
-    AuthModule,
+    AuthModule.register(SendService, SmsService),
     ConfigModule.forRoot(),
     RolesModule,
-    SmsModule,
     TypeOrmModuleForRoot,
     MailModule,
   ],

@@ -1,0 +1,4 @@
+Requires environmental variables
+
+TWILIO_AUTH_TOKEN
+TWILIO_ACCOUNT_SID

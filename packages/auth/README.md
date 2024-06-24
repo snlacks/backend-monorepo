@@ -1,0 +1,4 @@
+Requires environmental variables
+
+GMAIL_TOKEN
+GMAIL_CREDENTIALS

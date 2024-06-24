@@ -1,10 +1,9 @@
-import { Module } from "@nestjs/common";
+import { DynamicModule, Module } from "@nestjs/common";
 import { SendService } from "./send.service";
-import { ConnectService } from "./connect.service";
 import { MailController } from "./mail.controller";
 
 @Module({
-  providers: [SendService, ConnectService],
+  providers: [SendService],
   controllers: [MailController],
   exports: [SendService],
 })

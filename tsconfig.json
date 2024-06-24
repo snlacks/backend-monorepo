@@ -26,10 +26,16 @@
   },
   "references": [
     {
+      "path": "packages/auth"
+    },
+    {
       "path": "packages/token"
     },
     {
       "path": "packages/gmail"
+    },
+    {
+      "path": "packages/ai-chat"
     },
   ],
 }

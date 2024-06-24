@@ -30,7 +30,7 @@ async function bootstrap() {
     new ValidationPipe({
       disableErrorMessages: process.env.NODE_ENV === "production",
       transform: true,
-    })
+    }),
   );
 
   app.use(cookieParser());

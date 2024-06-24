@@ -2,19 +2,26 @@
   "name": "stevenlacks.com",
   "workspaces": [
     "apps/auth-server",
-    "packages/token",
+    "packages/auth",
+    "packages/twilio",
     "packages/config",
-    "packages/env-var-check",
-    "packages/gmail"
+    "packages/ai-chat",
+    "packages/gmail",
+    "packages/token"
   ],
   "scripts": {
-    "auth:dev": "npm --workspace=auth-server run start:dev",
-    "auth:test": "npm --workspace=auth-server run test",
-    "auth:e2e": "npm --workspace=auth-server run test:e2e",
-    "auth:watch": "npm --workspace=auth-server run test:watch",
-    "auth:cov": "npm --workspace=auth-server run test:cov",
-    "auth:build": "npm --workspace=auth-server run build",
-    "auth:lint": "npm --workspace=auth-server run lint",
-    "auth:start": "npm --workspace=auth-server run start"
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e --workspaces --if-present",
+    "as:dev": "npm --workspace=auth-server run start:dev",
+    "as:build": "npm --workspace=auth-server run build",
+    "as:lint": "npm --workspace=auth-server run lint",
+    "as:start": "npm --workspace=auth-server run start",
+    "as:e2e": "npm --workspace=@snlacks/auth run test:e2e",
+    "auth:test": "npm --workspace=@snlacks/auth run test",
+    "auth:e2e": "npm --workspace=@snlacks/auth run test:e2e",
+    "auth:watch": "npm --workspace=@snlacks/auth run test:watch",
+    "auth:cov": "npm --workspace=@snlacks/auth run test:cov",
+    "auth:lint": "npm --workspace=auth-server run lint"
   }
 }
