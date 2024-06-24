@@ -24,6 +24,7 @@
     "@snlacks/twilio": "*",
     "@snlacks/gmail": "*",
     "@google-cloud/local-auth": "^3.0.1",
+    "@nestjs/cli": "^10.0.0",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^10.3.9",
     "@nestjs/config": "^3.1.1",
@@ -46,7 +47,6 @@
     "typeorm": "^0.3.17"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.3.8",
     "@types/cookie-parser": "^1.4.7",
