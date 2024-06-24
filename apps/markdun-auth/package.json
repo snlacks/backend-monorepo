@@ -1,3 +1,21 @@
 {
-  "name": "markdun-auth"
+  "name": "markdun-auth",
+  "scripts": {
+    "build": "nest build",
+    "postbuild": "cp .env ../../dist/apps/markdun-auth/.env",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "cp .env ../../dist/apps/markdun-auth/.env && NODE_ENV=development nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node ../../dist/apps/markdun-auth/src/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "service-stop": "pm2 stop markdun-auth",
+    "service-delete": "pm2 delete markdun-auth",
+    "service-start": "pm2 start npm --name markdun-auth -- start"
+  },
+  "dependencies": {
+    "@nestjs/cli": "^10.0.0",
+    "@nestjs/common": "^10.3.9"
+  }
 }
