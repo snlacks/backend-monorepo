@@ -137,6 +137,7 @@ export class AuthService {
     const oneTimePassword = await this.createOTP();
 
     checkEnv("ONE_TIME_PASSWORD_SMS_SENDER_NUMBER");
+
     const smsResponse = await this.smsService.client.messages.create({
       body: `Your one-time passcode is ${oneTimePassword.oneTimePassword}`,
       from: process.env.ONE_TIME_PASSWORD_SMS_SENDER_NUMBER,

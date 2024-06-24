@@ -151,7 +151,6 @@ export class AuthController {
         await this.tokenService.getLoginCookie(oneTimePassword),
         this.tokenService.otpOptions()
       );
-      console.log(user, oneTimePassword);
     }
     return res.send();
   }
