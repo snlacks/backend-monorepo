@@ -17,7 +17,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "service-stop": "pm2 stop stevenlackscom-auth",
     "service-delete": "pm2 delete stevenlackscom-auth",
-    "service-start": "pm2 delete npm --name stevenlackscom-auth -- start"
+    "service-start": "pm2 start npm --name stevenlackscom-auth -- start"
   },
   "dependencies": {
     "@snlacks/token": "*",
