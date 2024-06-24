@@ -1,107 +1,20 @@
 {
-  "name": "whispy-portal",
-  "version": "0.1.0",
-  "description": "Whispy - Generative AI Portal",
-  "author": "",
-  "private": true,
-  "license": "UNLICENSED",
+  "name": "stevenlacks.com",
+  "workspaces": [
+    "apps/auth-server",
+    "packages/token",
+    "packages/config",
+    "packages/env-var-check",
+    "packages/gmail"
+  ],
   "scripts": {
-    "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "NODE_ENV=development nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:ci": "jest --coverage --coverageReporters=\"json-summary\"",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
-  },
-  "dependencies": {
-    "@google-cloud/local-auth": "^3.0.1",
-    "@nestjs/axios": "^3.0.2",
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/config": "^3.1.1",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/jwt": "^10.2.0",
-    "@nestjs/platform-express": "^10.0.0",
-    "@nestjs/typeorm": "^10.0.1",
-    "axios": "^1.7.2",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.0",
-    "date-fns": "^2.30.0",
-    "google-auth-library": "^9.11.0",
-    "googleapis": "^140.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.6.5",
-    "nodemailer": "^6.9.13",
-    "ollama": "^0.5.1",
-    "otp-generator": "^4.0.1",
-    "reflect-metadata": "^0.1.13",
-    "twilio": "^4.19.3",
-    "typeorm": "^0.3.17"
-  },
-  "devDependencies": {
-    "@nestjs/cli": "^10.0.0",
-    "@nestjs/schematics": "^10.0.0",
-    "@nestjs/testing": "^10.3.8",
-    "@types/cookie-parser": "^1.4.7",
-    "@types/express": "^4.17.17",
-    "@types/jest": "^29.5.2",
-    "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^20.3.1",
-    "@types/otp-generator": "^4.0.2",
-    "@types/supertest": "^2.0.12",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "cookie-parser": "^1.4.6",
-    "eslint": "^8.42.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.0.0",
-    "jest": "^29.5.0",
-    "prettier": "^3.0.0",
-    "source-map-support": "^0.5.21",
-    "supertest": "^6.3.3",
-    "ts-jest": "^29.1.0",
-    "ts-loader": "^9.4.3",
-    "ts-node": "^10.9.1",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.1.3"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "setupFiles": [
-      "<rootDir>/setupTests.ts"
-    ],
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coveragePathIgnorePatterns": [
-      "node_modules",
-      "test-config",
-      "interfaces",
-      "jestGlobalMocks.ts",
-      ".module.ts",
-      "main.ts",
-      ".mock.ts",
-      "dist",
-      ".module.ts",
-      ".entity.ts",
-      ".dto.ts"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "auth:dev": "npm --workspace=auth-server run start:dev",
+    "auth:test": "npm --workspace=auth-server run test",
+    "auth:e2e": "npm --workspace=auth-server run test:e2e",
+    "auth:watch": "npm --workspace=auth-server run test:watch",
+    "auth:cov": "npm --workspace=auth-server run test:cov",
+    "auth:build": "npm --workspace=auth-server run build",
+    "auth:lint": "npm --workspace=auth-server run lint",
+    "auth:start": "npm --workspace=auth-server run start"
   }
 }

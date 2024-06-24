@@ -17,6 +17,19 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@snlacks/*": [
+        "packages/*"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "packages/token"
+    },
+    {
+      "path": "packages/gmail"
+    },
+  ],
 }
