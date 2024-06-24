@@ -1,5 +1,5 @@
 import * as request from "supertest";
-import { AuthorizationCookie } from "@snlacks/auth/src/_mock-data/execution-context-data";
+import { AuthorizationCookie } from "@snlacks/auth/src/__mock__/execution-context-data";
 import { TokenService } from "@snlacks/token";
 
 const validPhone = "+15005550006";

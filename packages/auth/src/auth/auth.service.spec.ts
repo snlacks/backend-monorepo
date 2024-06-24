@@ -55,7 +55,7 @@ describe("AuthService", () => {
           ({
             data: { hash: testHash, salt: testSalt },
             exp: 9999999999,
-          }) as any
+          }) as any,
       ),
       getAuthorizationCookies: jest.fn(() => wrappedForCookies) as any,
     } as any;
@@ -63,7 +63,7 @@ describe("AuthService", () => {
       userService,
       smsService,
       tokenService,
-      sendService
+      sendService,
     );
   });
 
@@ -84,7 +84,7 @@ describe("AuthService", () => {
         { ...userService, findOne: () => undefined } as any,
         smsService,
         tokenService,
-        sendService
+        sendService,
       );
 
       await service
@@ -101,7 +101,7 @@ describe("AuthService", () => {
         expect(d).toStrictEqual({
           user: testUserWithRoles,
           ...wrappedForCookies,
-        })
+        }),
       );
     });
 
@@ -122,14 +122,14 @@ describe("AuthService", () => {
       { ...userService, findOne: () => undefined } as any,
       smsService,
       tokenService,
-      sendService
+      sendService,
     );
 
     await service
       .verifyOTP(
         "notauser", // this is demonstrative, the service throws an error because UserService returns undefind
         tokenOtp,
-        testPass
+        testPass,
       )
       .catch((e) => {
         expect(e.message).toBe("Unauthorized");

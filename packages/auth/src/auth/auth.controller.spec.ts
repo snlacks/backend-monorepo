@@ -3,7 +3,7 @@ import { AuthController } from "./auth.controller";
 import { someToken } from "./auth.mock";
 import { AuthService } from "./auth.service";
 import { Request, Response } from "express";
-import { testUser } from "../_mock-data/user-data";
+import { testUser } from "../__mocks__/user-data";
 import { TokenService } from "@snlacks/token";
 import { UsersService } from "../users/users.service";
 const testOTP = {
@@ -98,7 +98,7 @@ describe("AuthController", () => {
           },
         } as any,
         usersService,
-        tokenService
+        tokenService,
       );
       await controller
         .requestOTP(testUser, response)
@@ -115,7 +115,7 @@ describe("AuthController", () => {
           one_time_password: "123456",
         },
         request,
-        response
+        response,
       );
       expect(response.cookie).toHaveBeenCalledWith(
         TokenService.AUTHORIZATION_COOKIE_NAME,
@@ -123,7 +123,7 @@ describe("AuthController", () => {
         {
           httpOnly: true,
           sameSite: "strict",
-        }
+        },
       );
     });
   });
@@ -135,12 +135,12 @@ describe("AuthController", () => {
           password: "123456",
         },
         request,
-        response
+        response,
       );
       expect(response.cookie).toHaveBeenCalledWith(
         TokenService.LOGIN_NAME,
         expect.anything(),
-        expect.anything()
+        expect.anything(),
       );
     });
     it("should login on known device", async () => {
@@ -163,10 +163,10 @@ describe("AuthController", () => {
               resolve({
                 token: `Bearer ${someToken()}`,
                 device: someToken(),
-              })
+              }),
             );
           }),
-        } as any
+        } as any,
       );
       await controller.loginPassword(
         {
@@ -179,17 +179,17 @@ describe("AuthController", () => {
           },
           user: testUser,
         } as any as Request,
-        response
+        response,
       );
       expect(response.cookie).toHaveBeenCalledWith(
         TokenService.AUTHORIZATION_COOKIE_NAME,
         expect.anything(),
-        expect.anything()
+        expect.anything(),
       );
       expect(response.cookie).toHaveBeenCalledWith(
         TokenService.DEVICE_COOKIE_NAME,
         expect.anything(),
-        expect.anything()
+        expect.anything(),
       );
     });
   });
@@ -215,7 +215,7 @@ describe("AuthController", () => {
       const createUser = { ...testUser };
       const userWithPassword = { ...createUser, password: "1Ba!@xowow" };
       expect(
-        await controller.addUser(userWithPassword, response)
+        await controller.addUser(userWithPassword, response),
       ).toBeUndefined();
       expect(usersService.add).toHaveBeenCalledWith(userWithPassword);
     });
@@ -234,14 +234,14 @@ describe("AuthController", () => {
       expect(response.cookie).toHaveBeenCalledWith(
         TokenService.AUTHORIZATION_COOKIE_NAME,
         "",
-        expect.anything()
+        expect.anything(),
       );
     });
   });
   describe("#removeUser", () => {
     it("should add a user", async () => {
       expect(
-        await controller.removeUser({ id: "some_user_id" }, response)
+        await controller.removeUser({ id: "some_user_id" }, response),
       ).toBeUndefined();
       expect(usersService.remove).toHaveBeenCalledWith("some_user_id");
     });
@@ -258,7 +258,7 @@ describe("AuthController", () => {
           username: testUser.username,
           old_password: "old_pass",
           new_password: "new_pass",
-        })
+        }),
       ).toBeUndefined();
       expect(usersService.changePassword).toHaveBeenCalledWith(dto);
     });

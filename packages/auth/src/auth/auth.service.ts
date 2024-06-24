@@ -42,7 +42,7 @@ export const hashOTP = (oneTimePassword: string, salt) =>
         reject(err);
       }
       resolve(h.toString("hex"));
-    })
+    }),
   );
 
 const generateOtp = () =>
@@ -69,14 +69,14 @@ export class AuthService {
     private usersService: UsersService,
     @Inject(SNL_AUTH_SMS_KEY) private smsService: ISmsService,
     private tokenService: TokenService,
-    @Inject(SNL_AUTH_MAILER_KEY) private mailService: ISendService
+    @Inject(SNL_AUTH_MAILER_KEY) private mailService: ISendService,
   ) {}
 
   @UnauthorizedHandler()
   async verifyOTP(
     username: string,
     oneTimePasswordToken: string,
-    oneTimePassword: string
+    oneTimePassword: string,
   ): Promise<{ user: IUser; token: string; device: string }> {
     const user = await this.usersService.findOne(username);
 
@@ -92,7 +92,7 @@ export class AuthService {
 
   @UnauthorizedHandler()
   async loginPasswordOnly(
-    userInfo: SignInPasswordDto
+    userInfo: SignInPasswordDto,
   ): Promise<IUser | HasOneTimePassword> {
     const user = await this.usersService.findOne(userInfo.username);
     const entry = await this.usersService.findPass(user.user_id);

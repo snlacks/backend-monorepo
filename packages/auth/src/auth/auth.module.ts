@@ -14,7 +14,7 @@ import { ISendService, ISmsService } from "../../types";
 export class AuthModule {
   static register(
     SendService: typeof ISendService,
-    TextService: typeof ISmsService
+    TextService: typeof ISmsService,
   ): DynamicModule {
     return {
       module: AuthModule,

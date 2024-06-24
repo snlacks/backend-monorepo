@@ -23,7 +23,7 @@ export const hashPassword = (password: string, salt) =>
         reject(err);
       }
       resolve(h.toString("hex"));
-    })
+    }),
   );
 @Injectable()
 export class UsersService {
@@ -31,7 +31,7 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @InjectRepository(Password)
-    private passwordRepository: Repository<Password>
+    private passwordRepository: Repository<Password>,
   ) {}
 
   async findAll(): Promise<User[] | undefined> {
@@ -73,7 +73,7 @@ export class UsersService {
         hash,
         salt,
         expiration: formatISO(addYears(new Date(), 2)),
-      }
+      },
     );
   }
 
@@ -83,7 +83,7 @@ export class UsersService {
     if (existingUser) {
       throw new HttpException(
         "We can't verify that email, it might be invalid or already registered.",
-        HttpStatus.CONFLICT
+        HttpStatus.CONFLICT,
       );
     }
 

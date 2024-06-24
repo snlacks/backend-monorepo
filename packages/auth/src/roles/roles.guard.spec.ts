@@ -3,7 +3,7 @@ import { Reflector } from "@nestjs/core";
 import { someToken } from "../auth/auth.mock";
 import { RolesGuard } from "./roles.guard";
 import { TokenService } from "@snlacks/token";
-import { getExecutionContext } from "../_mock-data/execution-context-data";
+import { getExecutionContext } from "../__mocks__/execution-context-data";
 
 describe("RolesGuard", () => {
   let guard: RolesGuard;

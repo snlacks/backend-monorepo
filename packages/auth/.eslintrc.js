@@ -1,6 +1,6 @@
 
 module.exports = {
-  extends: "/config/eslintrc.js",
+  extends: "../../packages/config/.eslintrc.js",
   ignorePatterns: ["_gmail-init.js", "prettierrc.js"],
   parserOptions: {
     project: './tsconfig.json',

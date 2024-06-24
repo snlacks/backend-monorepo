@@ -38,7 +38,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
-    private tokenService: TokenService
+    private tokenService: TokenService,
   ) {
     checkEnv("JWT_SECRET");
     checkEnv("JWT_EXPIRES");
@@ -69,7 +69,7 @@ export class AuthController {
       res.cookie(
         TokenService.LOGIN_NAME,
         await this.tokenService.getLoginCookie(otpResponse.oneTimePassword),
-        this.tokenService.otpOptions()
+        this.tokenService.otpOptions(),
       );
       res.status(201);
       res.send(isDevTest ? otpResponse : null);
@@ -83,13 +83,13 @@ export class AuthController {
   async login(
     @Body() signInDto: SignInDTO,
     @Req() req: Request,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     try {
       const { user, token, device } = await this.authService.verifyOTP(
         signInDto.username,
         req.cookies[TokenService.LOGIN_NAME],
-        signInDto.one_time_password
+        signInDto.one_time_password,
       );
 
       res.cookie(TokenService.AUTHORIZATION_COOKIE_NAME, token, {
@@ -99,7 +99,7 @@ export class AuthController {
       res.cookie(
         TokenService.DEVICE_COOKIE_NAME,
         device,
-        this.tokenService.deviceOptions()
+        this.tokenService.deviceOptions(),
       );
 
       res.send(user);
@@ -114,43 +114,43 @@ export class AuthController {
   async loginPassword(
     @Body() signInDto: SignInPasswordDto,
     @Req() req: Request,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     let user: IUser | HasOneTimePassword;
     try {
       assert(req.cookies[TokenService.DEVICE_COOKIE_NAME]);
       const { data: knownDevice } = await this.tokenService.verifyAsync(
-        req.cookies[TokenService.DEVICE_COOKIE_NAME]
+        req.cookies[TokenService.DEVICE_COOKIE_NAME],
       );
       assert(knownDevice);
       user = (await this.authService.loginPasswordOnly(signInDto)) as IUser;
       assert(knownDevice.user_id === user.user_id);
 
       const { token, device } = await this.tokenService.getAuthorizationCookies(
-        user as IUser
+        user as IUser,
       );
 
       res.cookie(
         TokenService.AUTHORIZATION_COOKIE_NAME,
         token,
-        this.tokenService.authOptions()
+        this.tokenService.authOptions(),
       );
       res.cookie(
         TokenService.DEVICE_COOKIE_NAME,
         device,
-        this.tokenService.deviceOptions()
+        this.tokenService.deviceOptions(),
       );
       return res.send(user);
     } catch (e) {
       user = (await this.authService.loginPasswordOnly(signInDto)) as User;
       assert(user);
       const { oneTimePassword } = await this.authService.sendEmail(
-        user.username
+        user.username,
       );
       res.cookie(
         TokenService.LOGIN_NAME,
         await this.tokenService.getLoginCookie(oneTimePassword),
-        this.tokenService.otpOptions()
+        this.tokenService.otpOptions(),
       );
     }
     return res.send();
@@ -176,12 +176,12 @@ export class AuthController {
     res.cookie(
       TokenService.AUTHORIZATION_COOKIE_NAME,
       token,
-      this.tokenService.authOptions()
+      this.tokenService.authOptions(),
     );
     res.cookie(
       TokenService.DEVICE_COOKIE_NAME,
       device,
-      this.tokenService.deviceOptions()
+      this.tokenService.deviceOptions(),
     );
     res.send(token);
   }
