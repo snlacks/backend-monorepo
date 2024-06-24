@@ -14,7 +14,10 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "service-stop": "pm2 stop stevenlackscom-auth",
+    "service-delete": "pm2 delete stevenlackscom-auth",
+    "service-start": "pm2 delete npm --name stevenlackscom-auth -- start"
   },
   "dependencies": {
     "@snlacks/token": "*",
@@ -44,7 +47,8 @@
     "otp-generator": "^4.0.1",
     "reflect-metadata": "^0.1.13",
     "twilio": "^4.19.3",
-    "typeorm": "^0.3.17"
+    "typeorm": "^0.3.17",
+    "pm2": "^5.4.1"
   },
   "devDependencies": {
     "@nestjs/schematics": "^10.0.0",
