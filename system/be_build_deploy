@@ -1,0 +1,46 @@
+#!/bin/bash
+NN="\n>>>>"
+WS=$1
+
+abort()
+{
+    echo >&2 '
+***************
+*** ABORTED ***
+***************
+'
+    echo "An error occurred. Exiting..." >&2
+    exit 1
+}
+
+trap 'abort' 0
+
+echo
+echo "REMOVE OLD"
+rm -rf /root/backend-monorepo
+
+echo
+echo "GIT CLONE $WS"
+git clone git@github.com:snlacks/backend-monorepo.git
+
+echo
+echo "MOVE INTO $WS"
+cd /root/backend-monorepo
+
+echo
+echo "COPY ENV VARS INTO PROJECT SOURCE"
+bash /root/copy-env.sh
+
+echo
+echo "BUILD $WS"
+npm i --workspace=$WS; if [!$?]; then exit $?; fi
+
+echo
+echo "HEALTH CHECK"
+npm run healthcheck --workspace=$WS; if [!$?]; then exit $?; fi
+
+echo
+echo "DEPLOY"
+npm run launch --workspace=$WS; if [!$?]; then exit $?; fi
+
+trap : 0
