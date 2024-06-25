@@ -8,7 +8,7 @@ const prefix = "Bearer\u0020";
 
 @Injectable()
 export class TokenService {
-  constructor(private jwtService: JwtService) {}
+  constructor(private jwtService: JwtService) { }
 
   unwrapAuthCookie = (cookieVal: string) => cookieVal?.replace(prefix, "");
   wrapAuthCookie = (token: string) => `${prefix}${token}`;
@@ -32,7 +32,7 @@ export class TokenService {
         this.getSignerPayload(payload),
         this.jwtService.signAsync({ data: key ? payload[key] : payload }),
       ]);
-      return { token: this.wrapAuthCookie(unwrapped), device };
+      return { token: this.wrapAuthCookie(unwrapped), device, user: payload };
     } catch (e) {
       console.error(e);
     }
@@ -80,7 +80,15 @@ export class TokenService {
       domain: process.env.AUTH_DOMAIN,
     }) as CookieOptions;
 
+  userInfoOptions = () =>
+    ({
+      expires: addDays(new Date(), 30),
+      sameSite: "strict",
+      domain: process.env.AUTH_DOMAIN,
+    }) as CookieOptions;
+
   static AUTHORIZATION_COOKIE_NAME = "Authorization";
   static DEVICE_COOKIE_NAME = "KnownDevice";
   static LOGIN_NAME = "Login";
+  static USER_INFO = "UserInfo";
 }

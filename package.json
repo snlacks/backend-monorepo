@@ -1,36 +1,26 @@
 {
   "name": "stevenlacks.com",
   "workspaces": [
+    "apps/markdun-auth",
     "apps/stevenlackscom-auth",
+    "packages/token",
     "packages/auth",
     "packages/twilio",
     "packages/config",
     "packages/ai-chat",
     "packages/gmail",
-    "packages/token"
+    "packages/utils"
   ],
   "scripts": {
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "test:e2e": "npm run test:e2e --workspaces --if-present",
-    "as:dev": "npm --workspace=stevenlackscom-auth run start:dev",
-    "as:build": "npm --workspace=stevenlackscom-auth run build",
-    "as:lint": "npm --workspace=stevenlackscom-auth run lint",
-    "as:start": "npm --workspace=stevenlackscom-auth run start",
-    "as:e2e": "npm --workspace=@snlacks/auth run test:e2e",
-    "auth:test": "npm --workspace=@snlacks/auth run test",
-    "auth:e2e": "npm --workspace=@snlacks/auth run test:e2e",
-    "auth:watch": "npm --workspace=@snlacks/auth run test:watch",
-    "auth:cov": "npm --workspace=@snlacks/auth run test:cov",
-    "auth:lint": "npm --workspace=stevenlackscom-auth run lint",
-    "semver:setup": "npm config set sign-git-tag true",
-    "patch": "npm version patch"
+    "build": "npm run build --workspaces --if-present",
+    "test:e2e": "npm run test:e2e --workspaces --if-present"
   },
   "devDependencies": {
     "@types/eslint": "^8.56.10",
     "@types/estree": "^1.0.5",
     "@types/json-schema": "^7.0.15",
-    "@types/semver": "^7.5.8",
     "@types/validator": "^13.12.0"
   }
 }

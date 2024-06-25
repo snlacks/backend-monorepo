@@ -1,9 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { IS_PUBLIC_KEY } from "../users/public.decorator";
-import { isAfter } from "date-fns";
-import { TokenService } from "@snlacks/token";
-import { UnauthorizedHandler } from "../decorators/unauthorized-handler.decorator";
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from '../users/public.decorator';
+import { isAfter } from 'date-fns';
+import { TokenService } from '@snlacks/token';
+import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -27,14 +27,14 @@ export class AuthGuard implements CanActivate {
       request.cookies,
     );
     if (!incomingToken) {
-      throw "";
+      throw '';
     }
     const payload = await this.tokenService.getPayload(incomingToken);
     if (!payload || isAfter(new Date(), new Date(payload.exp * 1000))) {
-      throw "";
+      throw '';
     }
 
-    request["user"] = payload.data;
+    request['user'] = payload.data;
     const { token, device } = await this.tokenService.getAuthorizationCookies(
       payload.data,
     );

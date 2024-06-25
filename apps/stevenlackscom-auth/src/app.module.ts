@@ -1,23 +1,23 @@
-import { Module } from "@nestjs/common";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { ConfigModule } from "@nestjs/config";
-import { MailModule, SendService } from "@snlacks/gmail";
-import { AiChatModule } from "@snlacks/ai-chat";
-import { AuthModule, RolesModule } from "@snlacks/auth";
-import { SmsService } from "@snlacks/twilio";
-import { checkEnv } from "./checkEnv";
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import { MailModule, SendService } from '@snlacks/gmail';
+import { AiChatModule } from '@snlacks/ai-chat';
+import { AuthModule, RolesModule } from '@snlacks/auth';
+import { SmsService } from '@snlacks/twilio';
+import { checkEnv } from './checkEnv';
 
 const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
   useFactory: () => {
-    ["DB_HOST", "DB_PORT", "DB_USERNAME", "DB_PASSWORD", "DB_DATABASE"].forEach(
+    ['DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE'].forEach(
       (el) => {
         checkEnv(el);
       },
     );
     return {
-      type: "mysql",
+      type: 'mysql',
       host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT),
       username: process.env.DB_USERNAME,

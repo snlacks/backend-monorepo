@@ -1,8 +1,8 @@
-import { roles } from "./roles";
-import { RolesService } from "./roles.service";
+import { roles } from './roles';
+import { RolesService } from './roles.service';
 
-describe("RolesService", () => {
-  it("should pupulate the roles in the database", async () => {
+describe('RolesService', () => {
+  it('should pupulate the roles in the database', async () => {
     const roleRepository = {
       upsert: jest.fn(),
     };

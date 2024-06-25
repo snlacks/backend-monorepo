@@ -1,8 +1,8 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty } from 'class-validator';
 
 export class RequestOTPDTO {
   @IsNotEmpty()
   username: string;
   phone_number?: string;
-  method?: "sms" | "email";
+  method?: 'sms' | 'email';
 }

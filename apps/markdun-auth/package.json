@@ -5,17 +5,34 @@
     "postbuild": "cp .env ../../dist/apps/markdun-auth/.env",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "cp .env ../../dist/apps/markdun-auth/.env && NODE_ENV=development nest start --watch",
+    "start:dev": "NODE_ENV=development nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node ../../dist/apps/markdun-auth/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
     "service-stop": "pm2 stop markdun-auth",
     "service-delete": "pm2 delete markdun-auth",
-    "service-start": "pm2 start npm --name markdun-auth -- start"
+    "service-start": "pm2 start npm --name markdun-auth -- start",
+    "hc-start": "pm2 start npm --name hc-$npm_package_name -- start",
+    "hc-stop": "pm2 stop hc-$npm_package_name",
+    "hc-delete": "pm2 delete hc-$npm_package_name",
+    "hc-end": "npm run hc-stop && npm run hc-delete",
+    "wait-check": "APP_PORT=4000 concurrently \"npm run hc-start\" \"wait-on http-get://localhost:4000 --httpTimeout=20000\"",
+    "healthcheck": "cross-env npm run lint && npm run build && npm run wait-check && npm run hc-end"
   },
   "dependencies": {
     "@nestjs/cli": "^10.0.0",
-    "@nestjs/common": "^10.3.9"
+    "@nestjs/common": "^10.3.9",
+    "@snlacks/auth": "*",
+    "@snlacks/utils": "*",
+    "nodemailer": "^6.9.14",
+    "pm2": "^5.4.1",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.5.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.3",
+    "typescript-eslint": "^7.14.1"
   }
 }

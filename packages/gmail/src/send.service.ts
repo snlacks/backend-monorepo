@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { google } from "googleapis";
+import * as assert from 'assert';
 import * as MailComposer from "nodemailer/lib/mail-composer";
 import * as path from "path";
 import * as fs from "fs/promises";
@@ -7,6 +8,8 @@ import * as fs from "fs/promises";
 @Injectable()
 export class SendService {
   constructor() {
+    assert(!!process.env.GMAIL_TOKEN, 'env.GMAIL_TOKEN not present')
+    assert(!!process.env.GMAIL_CREDENTIALS, 'env.GMAIL_CREDENTIALS not present')
     this.TOKEN_PATH = path.join(process.cwd(), process.env.GMAIL_TOKEN);
     this.CREDENTIALS_PATH = path.join(
       process.cwd(),

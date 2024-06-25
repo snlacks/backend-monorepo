@@ -1,4 +1,4 @@
-import { UnauthorizedException } from "@nestjs/common";
+import { UnauthorizedException } from '@nestjs/common';
 
 export function UnauthorizedHandler(): MethodDecorator {
   return function (_, name: string, descriptor: PropertyDescriptor) {

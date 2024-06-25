@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsPhoneNumber } from "class-validator";
+import { IsEmail, IsNotEmpty, IsPhoneNumber } from 'class-validator';
 import {
   Entity,
   Column,
@@ -6,13 +6,13 @@ import {
   ManyToMany,
   JoinTable,
   Index,
-} from "typeorm";
-import { Role } from "../roles/role.entity";
-import { IUser } from "../../types";
+} from 'typeorm';
+import { Role } from '../roles/role.entity';
+import { IUser } from '../../types';
 
 @Entity()
 export class User implements IUser {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   user_id: string;
 
   @Column({ unique: true })
@@ -28,19 +28,19 @@ export class User implements IUser {
   @ManyToMany(() => Role, (role) => role.role_id, {
     eager: true,
     nullable: false,
-    onDelete: "CASCADE",
+    onDelete: 'CASCADE',
   })
   @JoinTable({
-    name: "user_role",
+    name: 'user_role',
     joinColumn: {
-      name: "user_id",
-      referencedColumnName: "user_id",
-      foreignKeyConstraintName: "user_role_user_id",
+      name: 'user_id',
+      referencedColumnName: 'user_id',
+      foreignKeyConstraintName: 'user_role_user_id',
     },
     inverseJoinColumn: {
-      name: "role_id",
-      referencedColumnName: "role_id",
-      foreignKeyConstraintName: "user_role_role_id",
+      name: 'role_id',
+      referencedColumnName: 'role_id',
+      foreignKeyConstraintName: 'user_role_role_id',
     },
   })
   @IsNotEmpty()

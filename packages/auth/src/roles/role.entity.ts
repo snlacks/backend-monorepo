@@ -1,8 +1,8 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryColumn } from "typeorm";
-import { IsNotEmpty } from "class-validator";
-import { IRole } from "../../types";
-import { User } from "../users/user.entity";
-import { ROLE } from "./roles";
+import { Column, Entity, JoinTable, ManyToMany, PrimaryColumn } from 'typeorm';
+import { IsNotEmpty } from 'class-validator';
+import { IRole } from '../../types';
+import { User } from '../users/user.entity';
+import { ROLE } from './roles';
 
 @Entity()
 export class Role extends IRole {

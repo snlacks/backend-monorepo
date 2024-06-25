@@ -1,15 +1,15 @@
-import { DynamicModule } from "@nestjs/common";
+import { DynamicModule } from '@nestjs/common';
 import {
   AuthService,
   SNL_AUTH_MAILER_KEY,
   SNL_AUTH_SMS_KEY,
-} from "./auth.service";
-import { AuthController } from "./auth.controller";
-import { AuthGuard } from "./auth.guard";
-import { APP_GUARD } from "@nestjs/core";
-import { UsersModule } from "../users/users.module";
-import { TokenModule } from "@snlacks/token";
-import { ISendService, ISmsService } from "../../types";
+} from './auth.service';
+import { AuthController } from './auth.controller';
+import { AuthGuard } from './auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { UsersModule } from '../users/users.module';
+import { TokenModule } from '@snlacks/token';
+import { ISendService, ISmsService } from '../../types';
 
 export class AuthModule {
   static register(

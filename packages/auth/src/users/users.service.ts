@@ -3,18 +3,18 @@ import {
   HttpStatus,
   Injectable,
   UnauthorizedException,
-} from "@nestjs/common";
-import * as crypto from "crypto";
-import { InjectRepository } from "@nestjs/typeorm";
-import { User } from "./user.entity";
-import { Repository } from "typeorm";
-import { CreateUserDTO } from "./dto/create-user.dto";
-import { Role } from "../roles/role.entity";
-import { addYears, formatISO } from "date-fns";
-import { Password } from "./password.entity";
-import { UpdatePasswordDTO } from "./dto/update-password-dto";
-import { ROLE } from "../roles/roles";
-import { IUser } from "../../types";
+} from '@nestjs/common';
+import * as crypto from 'crypto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './user.entity';
+import { Repository } from 'typeorm';
+import { CreateUserDTO } from './dto/create-user.dto';
+import { Role } from '../roles/role.entity';
+import { addYears, formatISO } from 'date-fns';
+import { Password } from './password.entity';
+import { UpdatePasswordDTO } from './dto/update-password-dto';
+import { ROLE } from '../roles/roles';
+import { IUser } from '../../types';
 
 export const hashPassword = (password: string, salt) =>
   new Promise<string>((resolve, reject) =>
@@ -22,7 +22,7 @@ export const hashPassword = (password: string, salt) =>
       if (err) {
         reject(err);
       }
-      resolve(h.toString("hex"));
+      resolve(h.toString('hex'));
     }),
   );
 @Injectable()
@@ -63,7 +63,7 @@ export class UsersService {
   }
 
   async updatePassword(userId: string, newPassword: string) {
-    const salt = crypto.randomBytes(16).toString("hex");
+    const salt = crypto.randomBytes(16).toString('hex');
     const hash = await hashPassword(newPassword, salt);
     return await this.passwordRepository.update(
       {
@@ -88,7 +88,7 @@ export class UsersService {
     }
 
     try {
-      const salt = crypto.randomBytes(16).toString("hex");
+      const salt = crypto.randomBytes(16).toString('hex');
       const hash = await hashPassword(user.password, salt);
       const pDTO = {
         hash,
@@ -109,7 +109,7 @@ export class UsersService {
       });
       return result;
     } catch (error) {
-      throw new HttpException("Unknown", HttpStatus.UNPROCESSABLE_ENTITY);
+      throw new HttpException('Unknown', HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }
   async remove(user_id: string) {

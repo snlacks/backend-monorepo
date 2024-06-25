@@ -1,13 +1,13 @@
-import * as crypto from "crypto";
-import * as assert from "assert";
-import * as otpGenerator from "otp-generator";
-import { isBefore } from "date-fns";
-import { Inject, Injectable } from "@nestjs/common";
-import { TokenService } from "@snlacks/token";
+import * as crypto from 'crypto';
+import * as assert from 'assert';
+import * as otpGenerator from 'otp-generator';
+import { isBefore } from 'date-fns';
+import { Inject, Injectable } from '@nestjs/common';
+import { TokenService } from '@snlacks/token';
 
-import { RequestOTPDTO } from "./dto/one-time-password.dto";
-import { SignInPasswordDto } from "./dto/sign-in-password.dto";
-import { UnauthorizedHandler } from "../decorators/unauthorized-handler.decorator";
+import { RequestOTPDTO } from './dto/one-time-password.dto';
+import { SignInPasswordDto } from './dto/sign-in-password.dto';
+import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
 import {
   HasHashSalt,
   HasOneTimePassword,
@@ -15,8 +15,8 @@ import {
   ISmsService,
   SmsResponse,
   IUser,
-} from "../../types";
-import { UsersService } from "../users/users.service";
+} from '../../types';
+import { UsersService } from '../users/users.service';
 
 const emailText = (oneTimePassword: string) => `
 Hello!
@@ -27,9 +27,9 @@ Thank you for using my app.
 
 For more information reply to this email.`;
 
-export const SNL_AUTH_MAILER_KEY = "SNL_AUTH_MAILER_KEY";
-export const SNL_AUTH_SMS_KEY = "SNL_AUTH_SMS_KEY";
-export const SNL_AUTH_USERS_KEY = "SNL_AUTH_USERS_KEY";
+export const SNL_AUTH_MAILER_KEY = 'SNL_AUTH_MAILER_KEY';
+export const SNL_AUTH_SMS_KEY = 'SNL_AUTH_SMS_KEY';
+export const SNL_AUTH_USERS_KEY = 'SNL_AUTH_USERS_KEY';
 export const checkEnv = (name: string) => {
   if (!process.env[name]) {
     throw new Error(`${name} is a required Environmental Variable`);
@@ -41,7 +41,7 @@ export const hashOTP = (oneTimePassword: string, salt) =>
       if (err) {
         reject(err);
       }
-      resolve(h.toString("hex"));
+      resolve(h.toString('hex'));
     }),
   );
 
@@ -51,10 +51,10 @@ const generateOtp = () =>
     upperCaseAlphabets: false,
     specialChars: false,
   });
-const phoneChars = new RegExp("(\\(|\\)|-|\\s*)+", "gi");
+const phoneChars = new RegExp('(\\(|\\)|-|\\s*)+', 'gi');
 
 const serializePhone = (...phoneNumbers: string[]) =>
-  phoneNumbers.map((p) => p.replace(phoneChars, ""));
+  phoneNumbers.map((p) => p.replace(phoneChars, ''));
 
 const passMatch = async (entry: HasHashSalt, password) => {
   const hash = await hashOTP(password, entry.salt);
@@ -85,7 +85,6 @@ export class AuthService {
     assert(isBefore(new Date(), new Date(entry.exp * 1000)));
     await passMatch(entry.data as HasHashSalt, oneTimePassword);
     return {
-      user,
       ...(await this.tokenService.getAuthorizationCookies(user)),
     };
   }
@@ -104,7 +103,7 @@ export class AuthService {
   async createOTP() {
     const oneTimePassword = generateOtp();
 
-    const salt = crypto.randomBytes(16).toString("hex");
+    const salt = crypto.randomBytes(16).toString('hex');
     const hash = await hashOTP(oneTimePassword, salt);
 
     return { oneTimePassword, salt, hash };
@@ -114,11 +113,11 @@ export class AuthService {
   async requestOTP({
     username,
     phone_number,
-    method = "sms",
+    method = 'sms',
   }: RequestOTPDTO): Promise<string | any> {
     const user = await this.usersService.findOne(username);
     let codeResponse: HasOneTimePassword;
-    if (method === "sms") {
+    if (method === 'sms') {
       const phoneNumbers = serializePhone(user.phone_number, phone_number);
       assert(phoneNumbers[0] === phoneNumbers[1]);
       codeResponse = await this.sendSms(user);
@@ -134,7 +133,7 @@ export class AuthService {
     try {
       await this.mailService.send({
         to: username,
-        subject: `StevenLacks.com code is: ${oneTimePassword.oneTimePassword}`,
+        subject: `Your ${process.env.SITE_NAME} code is: ${oneTimePassword.oneTimePassword}`,
         text: emailText(oneTimePassword.oneTimePassword),
         html: emailText(oneTimePassword.oneTimePassword),
       });
@@ -148,7 +147,7 @@ export class AuthService {
   async sendSms(user: IUser): Promise<SmsResponse> {
     const oneTimePassword = await this.createOTP();
 
-    checkEnv("ONE_TIME_PASSWORD_SMS_SENDER_NUMBER");
+    checkEnv('ONE_TIME_PASSWORD_SMS_SENDER_NUMBER');
 
     const smsResponse = await this.smsService.send({
       body: `Your one-time passcode is ${oneTimePassword.oneTimePassword}`,
@@ -158,7 +157,7 @@ export class AuthService {
 
     assert(smsResponse && !smsResponse.errorMessage);
     return {
-      body: smsResponse?.body.replace(/\d{6}/, "######"),
+      body: smsResponse?.body.replace(/\d{6}/, '######'),
       oneTimePassword,
     };
   }

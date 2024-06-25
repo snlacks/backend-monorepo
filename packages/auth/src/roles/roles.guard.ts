@@ -1,9 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { ROLES_KEY } from "./roles.decorator";
-import { TokenService } from "@snlacks/token";
-import { UnauthorizedHandler } from "../decorators/unauthorized-handler.decorator";
-import { ROLE } from "./roles";
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ROLES_KEY } from './roles.decorator';
+import { TokenService } from '@snlacks/token';
+import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
+import { ROLE } from './roles';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -27,11 +27,11 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.tokenService.extractTokenFromAuthCookie(request.cookies);
     if (!token) {
-      throw "no token";
+      throw 'no token';
     }
 
     const payload = await this.tokenService.verifyAsync(token);
-    request["user"] = payload.data;
+    request['user'] = payload.data;
 
     authorized = requiredRoles.some((role) =>
       request.user.roles?.find(({ role_id }) => role === role_id),

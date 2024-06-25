@@ -1,4 +1,4 @@
-import { someToken } from "../auth/auth.mock";
+import { someToken } from '../auth/auth.mock';
 
 export const AuthorizationCookie = `Bearer%20${someToken()}; Path=/; HttpOnly; SameSite=Strict; Domain=localhost`;
 

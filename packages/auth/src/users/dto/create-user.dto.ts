@@ -3,7 +3,7 @@ import {
   IsEmail,
   IsPhoneNumber,
   IsStrongPassword,
-} from "class-validator";
+} from 'class-validator';
 export class CreateUserDTO {
   @IsEmail()
   @IsNotEmpty()
