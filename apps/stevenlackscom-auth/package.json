@@ -1,6 +1,5 @@
 {
   "name": "stevenlackscom-auth",
-  "version": "0.1.0",
   "description": "Backend for user auth, login, logout",
   "author": "Steven Lacks <snlacks@gmail.com>",
   "private": true,

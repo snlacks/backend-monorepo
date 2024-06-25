@@ -1,5 +1,6 @@
 {
   "name": "stevenlacks.com",
+  "version": "1.0.0",
   "workspaces": [
     "apps/markdun-auth",
     "apps/stevenlackscom-auth",
