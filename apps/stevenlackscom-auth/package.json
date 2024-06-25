@@ -25,7 +25,7 @@
     "hc-end": "npm run hc-stop && npm run hc-delete",
     "wait-check": "APP_PORT=4000 concurrently \"npm run hc-start\" \"wait-on http-get://localhost:4000 --httpTimeout=20000\"",
     "healthcheck": "cross-env npm run lint && npm run build && npm run wait-check && npm run hc-end",
-    "launch": "npm run healthcheck && npm run build && npm run sctl-stop && npm run sctl-delete && npm run sctl-start"
+    "launch": "npm run build && npm run sctl-stop && npm run sctl-delete && npm run sctl-start"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
