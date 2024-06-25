@@ -1,8 +1,0 @@
-{
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-    "[typescript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-    },
-    "editor.tabSize": 2,
-    "workbench.colorTheme": "Low Eye Strain Solarized Dark+"
-}
