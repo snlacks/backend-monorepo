@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "postbuild": "cp .env ../../dist/apps/$npm_package_name/.env",
+    "postbuild": "ls -a ../../ && cp ../../.env.$npm_package_name ../../dist/apps/$npm_package_name/.env",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "NODE_ENV=development nest start --watch",

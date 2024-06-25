@@ -41,6 +41,8 @@ _gmail_token.json
 _gmail_credentials.json
 
 .env
+.env.markdun-auth
+.env.stevenlackscom-auth
 *.code.workspace
 
 #swagger/openapi

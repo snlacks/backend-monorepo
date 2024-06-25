@@ -2,7 +2,7 @@
   "name": "markdun-auth",
   "scripts": {
     "build": "nest build",
-    "postbuild": "cp .env ../../dist/apps/markdun-auth/.env",
+    "postbuild": "cp ../../.env.$npm_package_name ../../dist/apps/$npm_package_name/.env",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "NODE_ENV=development nest start --watch",
