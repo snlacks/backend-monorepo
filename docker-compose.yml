@@ -1,6 +1,7 @@
 services:
   db:
     image: mysql
+    restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_ROOT_ACCESS="%"
@@ -20,6 +21,7 @@ services:
   #  docker build --no-cache -f Dockerfile.markdun-auth -t auth-node .
   backend:
     image: auth-node
+    restart: always
     depends_on:
       db:
         condition: service_healthy
