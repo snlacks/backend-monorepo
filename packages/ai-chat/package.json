@@ -1,8 +1,0 @@
-{
-  "name": "@snlacks/ai-chat",
-  "peerDependencies": {
-    "@nestjs/common": "^10.3.9",
-    "ollama": "^0.5.2",
-    "express": "^4.19.2"
-  }
-}

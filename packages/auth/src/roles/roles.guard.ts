@@ -1,7 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
-import { TokenService } from '@snlacks/token';
+import { TokenService } from '@snlacks/core/token';
 import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
 import { ROLE } from './roles';
 

@@ -4,7 +4,7 @@ import { ExecutionContext } from '@nestjs/common';
 import { someToken } from './auth.mock';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
-import { TokenService } from '@snlacks/token';
+import { TokenService } from '@snlacks/core/token';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;

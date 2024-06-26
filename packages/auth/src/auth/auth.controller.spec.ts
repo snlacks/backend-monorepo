@@ -4,7 +4,7 @@ import { someToken } from './auth.mock';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { testUser } from '../__mocks__/user-data';
-import { TokenService } from '@snlacks/token';
+import { TokenService } from '@snlacks/core/token';
 import { UsersService } from '../users/users.service';
 const testOTP = {
   oneTimePassword: {

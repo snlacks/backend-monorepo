@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import * as otpGenerator from 'otp-generator';
 import { isBefore } from 'date-fns';
 import { Inject, Injectable } from '@nestjs/common';
-import { TokenService } from '@snlacks/token';
+import { TokenService } from '@snlacks/core/token';
 
 import { RequestOTPDTO } from './dto/one-time-password.dto';
 import { SignInPasswordDto } from './dto/sign-in-password.dto';

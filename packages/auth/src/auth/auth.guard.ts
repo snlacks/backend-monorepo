@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../users/public.decorator';
 import { isAfter } from 'date-fns';
-import { TokenService } from '@snlacks/token';
+import { TokenService } from '@snlacks/core/token';
 import { UnauthorizedHandler } from '../decorators/unauthorized-handler.decorator';
 @Injectable()
 export class AuthGuard implements CanActivate {

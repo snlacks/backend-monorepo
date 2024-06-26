@@ -7,9 +7,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node ../../dist/apps/markdun-auth/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "prebuild": "cp ../../.env.$npm_package_name .env",
     "build": "nest build",
-    "postbuild": "cp ../../.env.$npm_package_name ../../dist/apps/$npm_package_name/.env",
     "sctl-start": "pm2 start node --name $npm_package_name -- ../../dist/apps/$npm_package_name/src/main",
     "sctl-stop": "pm2 stop $npm_package_name || true",
     "sctl-delete": "pm2 delete $npm_package_name || true",
@@ -24,11 +22,14 @@
   "dependencies": {
     "@nestjs/cli": "^10.0.0",
     "@nestjs/common": "^10.3.9",
-    "@snlacks/auth": "*",
-    "@snlacks/utils": "*",
-    "nodemailer": "^6.9.14",
-    "pm2": "^5.4.1",
+    "@nestjs/config": "^3.1.1",
+    "@snlacks/core": "*",
     "concurrently": "^8.2.2",
+    "cookie-parser": "^1.4.6",
+    "nodemailer": "^6.9.14",
+    "otp-generator": "^4.0.1",
+    "pm2": "^5.4.1",
+    "typeorm": "^0.3.20",
     "wait-on": "^7.2.0"
   },
   "devDependencies": {

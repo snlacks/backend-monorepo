@@ -1,6 +1,0 @@
-{
-  "name": "@snlacks/twilio",
-  "peerDependencies": {
-    "@nestjs/common": "^10.3.9"
-  }
-}

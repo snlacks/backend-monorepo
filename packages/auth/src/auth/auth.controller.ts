@@ -22,7 +22,7 @@ import { Public } from '../users/public.decorator';
 import { Roles } from '../roles/roles.decorator';
 import { UpdatePasswordDTO } from '../users/dto/update-password-dto';
 import { SignInPasswordDto } from './dto/sign-in-password.dto';
-import { TokenService } from '@snlacks/token';
+import { TokenService } from '@snlacks/core/token';
 import * as assert from 'assert';
 import { HasOneTimePassword, IUser } from '../../types';
 import { CreateUserDTO } from '../users/dto/create-user.dto';
@@ -55,9 +55,13 @@ export class AuthController {
   @UsePipes(new ValidationPipe({ transform: true }))
   @Public()
   async addUser(@Body() user: CreateUserDTO, @Res() res: Response) {
+    try {
     const newUser = await this.usersService.add(user);
     res.status(201);
     res.send(newUser);
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   @Public()

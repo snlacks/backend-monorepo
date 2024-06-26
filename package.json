@@ -4,13 +4,7 @@
   "workspaces": [
     "apps/markdun-auth",
     "apps/stevenlackscom-auth",
-    "packages/token",
-    "packages/auth",
-    "packages/twilio",
-    "packages/config",
-    "packages/ai-chat",
-    "packages/gmail",
-    "packages/utils"
+    "packages"
   ],
   "scripts": {
     "lint": "npm run lint --workspaces --if-present",

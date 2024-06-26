@@ -8,7 +8,7 @@ import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
-import { TokenModule } from '@snlacks/token';
+import { TokenModule } from '@snlacks/core/token';
 import { ISendService, ISmsService } from '../../types';
 
 export class AuthModule {

@@ -2,7 +2,7 @@ import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { someToken } from '../auth/auth.mock';
 import { RolesGuard } from './roles.guard';
-import { TokenService } from '@snlacks/token';
+import { TokenService } from '@snlacks/core/token';
 import { getExecutionContext } from '../__mocks__/execution-context-data';
 
 describe('RolesGuard', () => {

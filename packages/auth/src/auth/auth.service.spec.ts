@@ -1,6 +1,6 @@
 import { UsersService } from '../users/users.service';
 import { User } from '../users/user.entity';
-import { TokenService } from '@snlacks/token';
+import { TokenService } from '@snlacks/core/token';
 import { someToken } from './auth.mock';
 import { ISendService, ISmsService } from '../../types';
 import { AuthService, hashOTP } from './auth.service';

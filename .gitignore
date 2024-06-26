@@ -42,8 +42,13 @@ _gmail_credentials.json
 
 .env
 .env.markdun-auth
+.env.markdun-auth.docker
 .env.stevenlackscom-auth
+.env.stevenlackscom-auth.docker
+.dkim
+
 *.code.workspace
 
 #swagger/openapi
 /documentation
+*.sql

@@ -1,0 +1,29 @@
+services:
+  db:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_ROOT_ACCESS="%"
+    ports:
+      - 3307:3306
+    volumes:
+      - auth-db-vol:/var/lib/mysql
+      - type: bind
+        source: ./user_auth.sql
+        target: /project/user_auth.sql
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h localhost -u  root -p${MYSQL_ROOT_PASSWORD}" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  #  docker build --no-cache -f Dockerfile.markdun-auth -t auth-node .
+  backend:
+    image: auth-node
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 3000:3000
+volumes:
+  auth-db-vol:

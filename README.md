@@ -1,3 +1,4 @@
+
 Dependencies for auth server
 
 MySQL database with a dedicated table

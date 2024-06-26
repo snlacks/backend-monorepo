@@ -3,10 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { MailModule, SendService } from '@snlacks/gmail';
-import { AiChatModule } from '@snlacks/ai-chat';
-import { AuthModule, RolesModule } from '@snlacks/auth';
-import { SmsService } from '@snlacks/twilio';
+import { MailModule, SendService } from '@snlacks/core/gmail';
+import { AiChatModule } from '@snlacks/core/ai-chat';
+import { AuthModule, RolesModule } from '@snlacks/core/auth';
+import { SmsService } from '@snlacks/core/twilio';
 import { checkEnv } from './checkEnv';
 
 const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
@@ -24,7 +24,6 @@ const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [],
-      synchronize: true,
       autoLoadEntities: true,
     };
   },

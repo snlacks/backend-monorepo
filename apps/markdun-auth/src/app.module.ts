@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '@snlacks/auth';
-import { checkEnv } from '@snlacks/utils';
+import { AuthModule } from '@snlacks/core/auth';
+import { checkEnv } from '@snlacks/core/utils';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { SendService } from './send.service';
@@ -20,8 +20,8 @@ const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
+      protocol: process.env.PROTOCOL,
       entities: [],
-      synchronize: true,
       autoLoadEntities: true,
     };
   },

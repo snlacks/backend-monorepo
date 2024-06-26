@@ -1,0 +1,12 @@
+{
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  },
+  "editor.tabSize": 2,
+  "workbench.colorTheme": "Solarized Light",
+  "explorer.fileNesting.patterns": {
+    ".env": ".env.markdun-auth*,.env.stevenlackscom-auth*",
+    "tsconfig.json": "tsconfig.*.json,tsconfig.*"
+  }
+}

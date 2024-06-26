@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { Public } from '@snlacks/auth';
+import { Public } from '@snlacks/core/auth';
 
 @Controller({})
 export class AppController {

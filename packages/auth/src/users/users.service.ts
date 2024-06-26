@@ -109,6 +109,7 @@ export class UsersService {
       });
       return result;
     } catch (error) {
+      console.error(error)
       throw new HttpException('Unknown', HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }
