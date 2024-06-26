@@ -20,7 +20,9 @@
     "launch": "npm run build && npm run sctl-stop && npm run sctl-delete && npm run sctl-start"
   },
   "dependencies": {
+    "@nestjs/typeorm": "^10.0.2",
     "@nestjs/cli": "^10.0.0",
+    "@nestjs/core": "^10.3.9",
     "@nestjs/common": "^10.3.9",
     "@nestjs/config": "^3.1.1",
     "@snlacks/core": "*",

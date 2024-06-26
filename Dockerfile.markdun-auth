@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:current-alpine
 
 RUN mkdir -p project
 WORKDIR /project
@@ -8,8 +8,9 @@ COPY apps/markdun-auth/package.json apps/markdun-auth/package.json
 COPY apps/markdun-auth/.dkim        apps/markdun-auth/.dkim
 COPY packages/package.json          package/package.json
 COPY package.json                   package.json
+COPY package-lock.json              package-lock.json
 
-RUN npm install --no-audit
+RUN npm install
 
 COPY apps/markdun-auth apps/markdun-auth
 COPY packages packages
