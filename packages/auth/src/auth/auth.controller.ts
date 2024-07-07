@@ -204,7 +204,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('/sign-out')
   async signOut(@Res() res: Response) {
-    res.clearCookie(TokenService.AUTHORIZATION_COOKIE_NAME);
+    res.clearCookie(TokenService.AUTHORIZATION_COOKIE_NAME, { domain: process.env.AUTH_DOMAIN });
     res.send();
   }
 
