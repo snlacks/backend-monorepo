@@ -48,6 +48,7 @@ _gmail_credentials.json
 .dkim
 
 *.code.workspace
+*.tar
 
 #swagger/openapi
 /documentation
