@@ -62,7 +62,6 @@ export class TokenService {
     ({
       sameSite: "strict",
       httpOnly: true,
-      domain: process.env.AUTH_DOMAIN,
     }) as CookieOptions;
 
   otpOptions = () =>
@@ -70,21 +69,18 @@ export class TokenService {
       sameSite: "strict",
       httpOnly: true,
       expires: addMinutes(new Date(), 15),
-      domain: process.env.AUTH_DOMAIN,
     }) as CookieOptions;
 
   deviceOptions = () =>
     ({
       expires: addDays(new Date(), 30),
       sameSite: "strict",
-      domain: process.env.AUTH_DOMAIN,
     }) as CookieOptions;
 
   userInfoOptions = () =>
     ({
       expires: addDays(new Date(), 30),
       sameSite: "strict",
-      domain: process.env.AUTH_DOMAIN,
     }) as CookieOptions;
 
   static AUTHORIZATION_COOKIE_NAME = "Authorization";

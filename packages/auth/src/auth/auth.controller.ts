@@ -42,7 +42,6 @@ export class AuthController {
   ) {
     checkEnv('JWT_SECRET');
     checkEnv('JWT_EXPIRES');
-    checkEnv('AUTH_DOMAIN');
   }
 
   @Get('/users')
@@ -204,7 +203,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('/sign-out')
   async signOut(@Res() res: Response) {
-    res.clearCookie(TokenService.AUTHORIZATION_COOKIE_NAME, { domain: process.env.AUTH_DOMAIN });
+    res.clearCookie(TokenService.AUTHORIZATION_COOKIE_NAME);
     res.send();
   }
 
