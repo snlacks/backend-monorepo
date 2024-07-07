@@ -50,6 +50,8 @@ _gmail_credentials.json
 *.code.workspace
 *.tar
 
+.github/workflows/verify.js.yml
+
 #swagger/openapi
 /documentation
 *.sql
