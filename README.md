@@ -18,14 +18,6 @@ Otherwise you can build it manually.
 npm run build --workspace=markdun-auth
 ```
 
-## Health Check
-
-The app projects each have a healthcheck option.
-To make sure the app will launch, you can run the app on port 4000 instead of 3000 as a system service, then runs a simple test again health
-```bash
-npm run healthcheck --workspace=markdun-auth
-```
-
 # Docker stuff
 Build examples:
 ```bash
