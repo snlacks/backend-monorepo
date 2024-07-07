@@ -25,3 +25,17 @@ To make sure the app will launch, you can run the app on port 4000 instead of 30
 ```bash
 npm run healthcheck --workspace=markdun-auth
 ```
+
+# Docker stuff
+Build examples:
+```bash
+docker build -f ./Dockerfile.markdun-auth  -t auth-node:latest .
+```
+```bash
+docker build -f ./Dockerfile.markdun-auth -t auth-node:$(date -d "today" +"%Y%m%d%H%M") .
+```
+
+Compose up:
+```bash
+MYSQL_ROOT_PASSWORD=some_password docker compose -f docker-compose.yml up -d
+```

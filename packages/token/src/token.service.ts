@@ -38,9 +38,9 @@ export class TokenService {
     }
   }
 
-  getLoginCookie = async (oneTimePassword: HasHashSalt) => {
+  getLoginCookie = async (credentials: HasHashSalt) => {
     return this.jwtService.signAsync({
-      data: { hash: oneTimePassword.hash, salt: oneTimePassword.salt },
+      data: { hash: credentials.hash, salt: credentials.salt },
     });
   };
 

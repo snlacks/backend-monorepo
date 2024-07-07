@@ -148,12 +148,12 @@ export class AuthController {
     } catch (e) {
       user = (await this.authService.loginPasswordOnly(signInDto)) as User;
       assert(user);
-      const { oneTimePassword } = await this.authService.sendEmail(
+      const { credentials } = await this.authService.sendEmail(
         user.username,
       );
       res.cookie(
         TokenService.LOGIN_NAME,
-        await this.tokenService.getLoginCookie(oneTimePassword),
+        await this.tokenService.getLoginCookie(credentials),
         this.tokenService.otpOptions(),
       );
     }

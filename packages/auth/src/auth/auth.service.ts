@@ -129,28 +129,28 @@ export class AuthService {
 
   @UnauthorizedHandler()
   async sendEmail(username: string): Promise<HasOneTimePassword> {
-    const oneTimePassword = await this.createOTP();
+    const creds = await this.createOTP();
     try {
       await this.mailService.send({
         to: username,
-        subject: `Your ${process.env.SITE_NAME} code is: ${oneTimePassword.oneTimePassword}`,
-        text: emailText(oneTimePassword.oneTimePassword),
-        html: emailText(oneTimePassword.oneTimePassword),
+        subject: `Your ${process.env.SITE_NAME} code is: ${creds.oneTimePassword}`,
+        text: emailText(creds.oneTimePassword),
+        html: emailText(creds.oneTimePassword),
       });
     } catch (e) {
       console.error(e);
     }
-    return { oneTimePassword };
+    return { credentials: creds };
   }
 
   @UnauthorizedHandler()
   async sendSms(user: IUser): Promise<SmsResponse> {
-    const oneTimePassword = await this.createOTP();
+    const credentials = await this.createOTP();
 
     checkEnv('ONE_TIME_PASSWORD_SMS_SENDER_NUMBER');
 
     const smsResponse = await this.smsService.send({
-      body: `Your one-time passcode is ${oneTimePassword.oneTimePassword}`,
+      body: `Your one-time passcode is ${credentials.oneTimePassword}`,
       from: process.env.ONE_TIME_PASSWORD_SMS_SENDER_NUMBER,
       to: user.phone_number,
     });
@@ -158,7 +158,7 @@ export class AuthService {
     assert(smsResponse && !smsResponse.errorMessage);
     return {
       body: smsResponse?.body.replace(/\d{6}/, '######'),
-      oneTimePassword,
+      credentials,
     };
   }
 }

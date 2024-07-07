@@ -5,7 +5,7 @@ export interface SmsResponse extends HasOneTimePassword {
 }
 
 export interface HasOneTimePassword {
-  oneTimePassword: { oneTimePassword: string } & HasHashSalt;
+  credentials: { oneTimePassword: string } & HasHashSalt;
 }
 
 export interface HasHashSalt {
