@@ -15,6 +15,7 @@ import { Password } from './password.entity';
 import { UpdatePasswordDTO } from './dto/update-password-dto';
 import { ROLE } from '../roles/roles';
 import { IUser } from '../../types';
+import { UserRoleRelationship } from '../roles/user_role.entity';
 
 export const hashPassword = (password: string, salt) =>
   new Promise<string>((resolve, reject) =>
@@ -32,6 +33,8 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(Password)
     private passwordRepository: Repository<Password>,
+    @InjectRepository(UserRoleRelationship)
+    private userRoleRepository: Repository<UserRoleRelationship>,
   ) {}
 
   async findAll(): Promise<User[] | undefined> {
@@ -87,34 +90,60 @@ export class UsersService {
       );
     }
 
-    try {
-      const salt = crypto.randomBytes(16).toString('hex');
-      const hash = await hashPassword(user.password, salt);
-      const pDTO = {
-        hash,
-        salt,
-        expiration: formatISO(addYears(new Date(), 2)),
-      };
-      const newUser = this.usersRepository.create({
-        ...user,
-        roles: [{ ...new Role(), role_id: ROLE.USER }],
-      });
-      // if (!newPass) {
-      //   throw new Error('Password error');
-      // }
-      const result = await this.usersRepository.save(newUser);
-      await this.passwordRepository.insert({
-        ...pDTO,
-        user_id: result.user_id,
-      });
-      return result;
-    } catch (error) {
-      console.error(error)
-      throw new HttpException('Unknown', HttpStatus.UNPROCESSABLE_ENTITY);
-    }
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = await hashPassword(user.password, salt);
+    const pDTO = {
+      hash,
+      salt,
+      expiration: formatISO(addYears(new Date(), 2)),
+    };
+    const newUser = this.usersRepository.create({
+      ...user,
+      roles: [{ ...new Role(), role_id: ROLE.USER }],
+    });
+    // if (!newPass) {
+    //   throw new Error('Password error');
+    // }
+    const result = await this.usersRepository.save(newUser);
+    await this.passwordRepository.insert({
+      ...pDTO,
+      user_id: result.user_id,
+    });
+    return result;
   }
+
   async remove(user_id: string) {
     await this.usersRepository.delete({ user_id });
     await this.passwordRepository.delete({ user_id });
+  }
+
+  async addUserRole(user_id: string, role_id: ROLE) {
+    const user = await this.usersRepository.findOne({
+      where: { user_id },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      return;
+    }
+    await this.userRoleRepository.upsert({ user_id, role_id }, [
+      'user_id',
+      'role_id',
+    ]);
+  }
+  async removeUserRole(user_id: string, role_id: ROLE) {
+    const user = await this.usersRepository.findOne({
+      where: { user_id },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      return;
+    }
+    await this.userRoleRepository
+      .createQueryBuilder()
+      .where('user_id = :user_id AND role_id = :role_id', { user_id, role_id })
+      .delete()
+      .execute();
   }
 }

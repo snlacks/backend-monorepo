@@ -45,10 +45,14 @@ export class TokenService {
   };
 
   async verifyAsync(token, options: JwtVerifyOptions = {}) {
+    try {
     return await this.jwtService.verifyAsync(token, {
       ...options,
       secret: process.env.JWT_SECRET,
     });
+  } catch (e) {
+    console.error(e)
+  }
   }
 
   async getPayload<T>(token): Promise<{ exp: number; data: T }> {

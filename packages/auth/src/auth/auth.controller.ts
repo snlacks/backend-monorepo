@@ -55,11 +55,11 @@ export class AuthController {
   @Public()
   async addUser(@Body() user: CreateUserDTO, @Res() res: Response) {
     try {
-    const newUser = await this.usersService.add(user);
-    res.status(201);
-    res.send(newUser);
+      const newUser = await this.usersService.add(user);
+      res.status(201);
+      res.send(newUser);
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
   }
 
@@ -147,9 +147,7 @@ export class AuthController {
     } catch (e) {
       user = (await this.authService.loginPasswordOnly(signInDto)) as User;
       assert(user);
-      const { credentials } = await this.authService.sendEmail(
-        user.username,
-      );
+      const { credentials } = await this.authService.sendEmail(user.username);
       res.cookie(
         TokenService.LOGIN_NAME,
         await this.tokenService.getLoginCookie(credentials),
@@ -213,6 +211,27 @@ export class AuthController {
   async removeUser(@Param() params: { id: string }, @Res() res: Response) {
     await this.usersService.remove(params.id);
     res.status(204);
+    res.send();
+  }
+
+  @Roles(ROLE.ADMIN)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Post('/users/:id/role/:role')
+  async addUserRole(
+    @Param() params: { id: string; role: ROLE },
+    @Res() res: Response,
+  ) {
+    await this.usersService.addUserRole(params.id, params.role);
+    res.send();
+  }
+  @Roles(ROLE.ADMIN)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Delete('/users/:id/role/:role')
+  async removeUserRole(
+    @Param() params: { id: string; role: ROLE },
+    @Res() res: Response,
+  ) {
+    await this.usersService.removeUserRole(params.id, params.role);
     res.send();
   }
 }
