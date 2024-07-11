@@ -31,3 +31,13 @@ Compose up:
 ```bash
 MYSQL_ROOT_PASSWORD=some_password docker compose -f docker-compose.yml up -d
 ```
+
+Saving an image:
+
+```bash
+docker save -o auth-node.tar auth-node
+```
+
+```bash
+scp -i ~/.ssh/[key] /.../auth-node.tar steven@159.89.233.185:/.../auth-node.tar
+```

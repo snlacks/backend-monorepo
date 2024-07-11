@@ -1,4 +1,4 @@
-import { ROLE } from "./src/roles/roles";
+import { ROLE } from './src/roles/roles';
 
 export interface SmsResponse extends HasOneTimePassword {
   body: string;

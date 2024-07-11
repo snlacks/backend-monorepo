@@ -2,20 +2,22 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
-import { Repository } from 'typeorm';
+import { LessThan, MoreThan, Repository } from 'typeorm';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { Role } from '../roles/role.entity';
-import { addYears, formatISO } from 'date-fns';
+import { addMinutes, addYears, formatISO } from 'date-fns';
 import { Password } from './password.entity';
 import { UpdatePasswordDTO } from './dto/update-password-dto';
 import { ROLE } from '../roles/roles';
 import { IUser } from '../../types';
 import { UserRoleRelationship } from '../roles/user_role.entity';
+import { Attempt } from '../attempts/attempt.entity';
 
 export const hashPassword = (password: string, salt) =>
   new Promise<string>((resolve, reject) =>
@@ -35,7 +37,11 @@ export class UsersService {
     private passwordRepository: Repository<Password>,
     @InjectRepository(UserRoleRelationship)
     private userRoleRepository: Repository<UserRoleRelationship>,
+    @InjectRepository(Attempt)
+    private attemptRepository: Repository<Attempt>,
   ) {}
+
+  private logger = new Logger(UsersService.name);
 
   async findAll(): Promise<User[] | undefined> {
     return this.usersRepository.find();
@@ -145,5 +151,39 @@ export class UsersService {
       .where('user_id = :user_id AND role_id = :role_id', { user_id, role_id })
       .delete()
       .execute();
+  }
+
+  async addAttempt(username: string) {
+    try {
+      await this.attemptRepository.insert({
+        username,
+      });
+      return;
+    } catch (e) {
+      this.logger.error(e.message);
+    }
+  }
+
+  async getAttempts(username) {
+    try {
+      const r = await this.attemptRepository
+        .createQueryBuilder()
+        .where({
+          username,
+        })
+        .andWhere({
+          time: MoreThan(formatISO(addMinutes(new Date(), -15))),
+        })
+        .execute();
+      return r;
+    } catch (e) {
+      this.logger.error(e.message);
+    }
+  }
+
+  async deleteAttempts(username) {
+    return this.attemptRepository.delete({
+      username,
+    });
   }
 }

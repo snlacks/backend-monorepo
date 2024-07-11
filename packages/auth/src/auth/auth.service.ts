@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 import * as assert from 'assert';
 import * as otpGenerator from 'otp-generator';
 import { isBefore } from 'date-fns';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { TokenService } from '@snlacks/core/token';
 
 import { RequestOTPDTO } from './dto/one-time-password.dto';
@@ -56,7 +56,7 @@ const phoneChars = new RegExp('(\\(|\\)|-|\\s*)+', 'gi');
 const serializePhone = (...phoneNumbers: string[]) =>
   phoneNumbers.map((p) => p.replace(phoneChars, ''));
 
-const passMatch = async (entry: HasHashSalt, password) => {
+const passMatch = async (entry: HasHashSalt, password: string) => {
   const hash = await hashOTP(password, entry.salt);
   assert(hash === entry.hash);
 
@@ -72,6 +72,8 @@ export class AuthService {
     @Inject(SNL_AUTH_MAILER_KEY) private mailService: ISendService,
   ) {}
 
+  private logger = new Logger(AuthService.name)
+
   @UnauthorizedHandler()
   async verifyOTP(
     username: string,
@@ -79,8 +81,8 @@ export class AuthService {
     oneTimePassword: string,
   ): Promise<{ user: IUser; token: string; device: string }> {
     const user = await this.usersService.findOne(username);
-
     assert(user);
+
     const entry = await this.tokenService.getPayload(oneTimePasswordToken);
     assert(isBefore(new Date(), new Date(entry.exp * 1000)));
     await passMatch(entry.data as HasHashSalt, oneTimePassword);
@@ -90,16 +92,28 @@ export class AuthService {
   }
 
   @UnauthorizedHandler()
-  async loginPasswordOnly(
-    userInfo: SignInPasswordDto,
-  ): Promise<IUser | HasOneTimePassword> {
+  async loginPasswordOnly(userInfo: SignInPasswordDto): Promise<IUser> {
     const user = await this.usersService.findOne(userInfo.username);
     const entry = await this.usersService.findPass(user.user_id);
 
     await passMatch(entry, userInfo.password);
-
     return user;
   }
+
+  async checkAttempts(username: string) {
+    const attempts = await this.usersService.getAttempts(username);
+
+    if (attempts.length > 6) {
+      throw 'Too many attempts, try again in 15 minutes.';
+    } else if (attempts.length > 0 && attempts.length <= 5) {
+      await new Promise<void>((resolve) =>
+        setTimeout(() => {
+          resolve();
+        }, attempts.length * 1000),
+      );
+    }
+  }
+
   async createOTP() {
     const oneTimePassword = generateOtp();
 
@@ -138,7 +152,7 @@ export class AuthService {
         html: emailText(creds.oneTimePassword),
       });
     } catch (e) {
-      console.error(e);
+      this.logger.error(e.message);
     }
     return { credentials: creds };
   }

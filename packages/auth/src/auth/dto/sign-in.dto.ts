@@ -7,4 +7,6 @@ export class SignInDTO {
   @IsNotEmpty()
   @Length(6, 6)
   one_time_password: string;
+
+  remember_me?: boolean;
 }

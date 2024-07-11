@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { JwtService, JwtVerifyOptions } from "@nestjs/jwt";
 import { addDays, addMinutes } from "date-fns";
 import { CookieOptions } from "express";
@@ -9,6 +9,8 @@ const prefix = "Bearer\u0020";
 @Injectable()
 export class TokenService {
   constructor(private jwtService: JwtService) { }
+
+  private logger = new Logger(TokenService.name);
 
   unwrapAuthCookie = (cookieVal: string) => cookieVal?.replace(prefix, "");
   wrapAuthCookie = (token: string) => `${prefix}${token}`;
@@ -34,7 +36,7 @@ export class TokenService {
       ]);
       return { token: this.wrapAuthCookie(unwrapped), device, user: payload };
     } catch (e) {
-      console.error(e);
+      this.logger.error(e);
     }
   }
 
@@ -51,7 +53,7 @@ export class TokenService {
       secret: process.env.JWT_SECRET,
     });
   } catch (e) {
-    console.error(e)
+    this.logger.error(e);
   }
   }
 

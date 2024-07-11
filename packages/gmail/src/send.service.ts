@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { google } from 'googleapis';
 import * as assert from 'assert';
 import * as MailComposer from 'nodemailer/lib/mail-composer';
@@ -19,6 +19,9 @@ export class SendService {
       process.env.GMAIL_CREDENTIALS,
     );
   }
+
+  private logger = new Logger(SendService.name);
+
   TOKEN_PATH: string;
   CREDENTIALS_PATH: string;
   getGmailService = async () => {
@@ -63,7 +66,7 @@ export class SendService {
           raw: rawMessage,
         },
       } as any)
-      .catch(console.error);
+      .catch(error =>  this.logger.error(error.message));
   };
 
   send = async ({

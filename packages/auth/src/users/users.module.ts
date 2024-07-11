@@ -6,10 +6,17 @@ import { UsersService } from './users.service';
 import { Password } from './password.entity';
 import { RolesModule } from '../roles/roles.module';
 import { UserRoleRelationship } from '../roles/user_role.entity';
+import { Attempt } from '../attempts/attempt.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, Password, UserRoleRelationship]),
+    TypeOrmModule.forFeature([
+      User,
+      Role,
+      Password,
+      UserRoleRelationship,
+      Attempt,
+    ]),
     RolesModule,
   ],
   providers: [UsersService],

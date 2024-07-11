@@ -7,4 +7,6 @@ export class SignInPasswordDto {
 
   @IsNotEmpty()
   password: string;
+
+  remember_me?: boolean;
 }
