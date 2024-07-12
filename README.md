@@ -42,3 +42,10 @@ docker save -o auth-node.tar auth-node
 ```bash
 scp -i ~/.ssh/[key] /.../auth-node.tar steven@159.89.233.185:/.../auth-node.tar
 ```
+
+Sharing to registry
+```bash
+docker commit <container-id> <auth-node|auth-mysql|markdun-fe|etc...>
+docker tag <commit-name> container-registry.stevenlacks.com/<resource>
+docker push container-registry.stevenlacks.com/<resource>
+```
