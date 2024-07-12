@@ -1,6 +1,6 @@
 services:
   db:
-    image: mysql
+    image: container-registry.stevenlacks.com/auth-mysql
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
@@ -10,8 +10,9 @@ services:
     volumes:
       - auth-db-vol:/var/lib/mysql
       - type: bind
-        source: ./user_auth.sql
-        target: /project/user_auth.sql
+        source: ./migrations
+        target: /project
+    command:
     healthcheck:
       test: ["CMD-SHELL", "mysql -h localhost -u  root -p${MYSQL_ROOT_PASSWORD}" ]
       interval: 5s
@@ -20,7 +21,7 @@ services:
 
   #  docker build --no-cache -f Dockerfile.markdun-auth -t auth-node .
   backend:
-    image: auth-node
+    image: container-registry.stevenlacks.com/auth-node
     restart: always
     depends_on:
       db:
@@ -32,6 +33,15 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
+
+  frontend:
+    image: container-registry.stevenlacks.com/markdun-fe
+    restart: always
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - 3001:3000
 
 volumes:
   auth-db-vol:

@@ -107,14 +107,14 @@ export class UsersService {
       ...user,
       roles: [{ ...new Role(), role_id: ROLE.USER }],
     });
-    // if (!newPass) {
-    //   throw new Error('Password error');
-    // }
     const result = await this.usersRepository.save(newUser);
     await this.passwordRepository.insert({
       ...pDTO,
       user_id: result.user_id,
     });
+    if(!result.user_id){
+      throw 'Unknown'
+    }
     return result;
   }
 

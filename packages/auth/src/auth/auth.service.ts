@@ -72,7 +72,7 @@ export class AuthService {
     @Inject(SNL_AUTH_MAILER_KEY) private mailService: ISendService,
   ) {}
 
-  private logger = new Logger(AuthService.name)
+  private logger = new Logger(AuthService.name);
 
   @UnauthorizedHandler()
   async verifyOTP(
@@ -124,11 +124,10 @@ export class AuthService {
   }
 
   @UnauthorizedHandler()
-  async requestOTP({
-    username,
-    phone_number,
-    method = 'sms',
-  }: RequestOTPDTO): Promise<string | any> {
+  async requestOTP(
+    { username, phone_number, method = 'sms' }: RequestOTPDTO,
+    hostname?: string,
+  ): Promise<string | any> {
     const user = await this.usersService.findOne(username);
     let codeResponse: HasOneTimePassword;
     if (method === 'sms') {
@@ -136,18 +135,21 @@ export class AuthService {
       assert(phoneNumbers[0] === phoneNumbers[1]);
       codeResponse = await this.sendSms(user);
     } else {
-      codeResponse = await this.sendEmail(user.username);
+      codeResponse = await this.sendEmail(user.username, hostname);
     }
     return codeResponse;
   }
 
   @UnauthorizedHandler()
-  async sendEmail(username: string): Promise<HasOneTimePassword> {
+  async sendEmail(
+    username: string,
+    hostname?: string,
+  ): Promise<HasOneTimePassword> {
     const creds = await this.createOTP();
     try {
       await this.mailService.send({
         to: username,
-        subject: `Your ${process.env.SITE_NAME} code is: ${creds.oneTimePassword}`,
+        subject: `Your ${hostname || 'login'} code is: ${creds.oneTimePassword}`,
         text: emailText(creds.oneTimePassword),
         html: emailText(creds.oneTimePassword),
       });
@@ -159,20 +161,19 @@ export class AuthService {
 
   @UnauthorizedHandler()
   async sendSms(user: IUser): Promise<SmsResponse> {
-    const credentials = await this.createOTP();
+      const credentials = await this.createOTP();
 
-    checkEnv('ONE_TIME_PASSWORD_SMS_SENDER_NUMBER');
+      checkEnv('ONE_TIME_PASSWORD_SMS_SENDER_NUMBER');
+      const smsResponse = await this.smsService.send({
+        body: `Your one-time passcode is ${credentials.oneTimePassword}`,
+        from: process.env.ONE_TIME_PASSWORD_SMS_SENDER_NUMBER,
+        to: user.phone_number,
+      });
 
-    const smsResponse = await this.smsService.send({
-      body: `Your one-time passcode is ${credentials.oneTimePassword}`,
-      from: process.env.ONE_TIME_PASSWORD_SMS_SENDER_NUMBER,
-      to: user.phone_number,
-    });
-
-    assert(smsResponse && !smsResponse.errorMessage);
-    return {
-      body: smsResponse?.body.replace(/\d{6}/, '######'),
-      credentials,
-    };
+      assert(smsResponse && !smsResponse.errorMessage);
+      return {
+        body: smsResponse?.body.replace(/\d{6}/, '######'),
+        credentials,
+      };
   }
 }

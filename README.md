@@ -24,7 +24,8 @@ Build examples:
 docker build -f ./Dockerfile.markdun-auth  -t auth-node:latest .
 ```
 ```bash
-docker build -f ./Dockerfile.markdun-auth -t auth-node:$(date -d "today" +"%Y%m%d%H%M") .
+# create a date-tagged and a latest copy
+docker build -f ./Dockerfile.markdun-auth -t auth-node:$(date -d "today" +"%Y%m%d%H%M") -t auth-node .
 ```
 
 Compose up:

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '@snlacks/core/auth';
 import { checkEnv } from '@snlacks/core/utils';
+import { SmsService } from '@snlacks/core/twilio';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { SendService } from './send.service';
@@ -29,7 +30,7 @@ const TypeOrmModuleForRoot = TypeOrmModule.forRootAsync({
 @Module({
   imports: [
     TypeOrmModuleForRoot,
-    AuthModule.register(SendService, SendService),
+    AuthModule.register(SendService, SmsService),
     ConfigModule.forRoot(),
   ],
   controllers: [AppController],

@@ -65,12 +65,13 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post("/request-otp")
-  async requestOTP(@Body() requestOTPDTO: RequestOTPDTO, @Res() res: Response) {
+  async requestOTP(@Body() requestOTPDTO: RequestOTPDTO, @Req() req: Request, @Res() res: Response) {
     try {
-      const otpResponse = await this.authService.requestOTP(requestOTPDTO);
+      const otpResponse = await this.authService.requestOTP(requestOTPDTO, req.hostname);
+
       res.cookie(
         TokenService.LOGIN_NAME,
-        await this.tokenService.getLoginCookie(otpResponse.oneTimePassword),
+        await this.tokenService.getLoginCookie(otpResponse.credentials),
         this.tokenService.otpOptions()
       );
       res.status(201);
@@ -163,7 +164,7 @@ export class AuthController {
         ? user
         : await this.authService.loginPasswordOnly(signInDto);
       assert(user);
-      const { credentials } = await this.authService.sendEmail(user.username);
+      const { credentials } = await this.authService.sendEmail(user.username, req.hostname);
       res.cookie(
         TokenService.LOGIN_NAME,
         await this.tokenService.getLoginCookie(credentials),
