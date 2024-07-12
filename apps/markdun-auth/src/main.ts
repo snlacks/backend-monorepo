@@ -17,6 +17,8 @@ async function bootstrap() {
       const match = [
         'http://localhost:3001',
         'https://id.markdun.com',
+        'https://id.test.markdun.com',
+        'https://test.markdun.com',
       ].includes(origin);
       callback(null, match);
     },
