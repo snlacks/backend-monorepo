@@ -1,3 +1,7 @@
+Basic Design
+
+domain.com -> front end
+domain.com/id -> auth-node, which relies on auth-mysql
 
 Dependencies for auth server
 
@@ -48,4 +52,5 @@ Sharing to registry
 docker commit <container-id> <auth-node|auth-mysql|markdun-fe|etc...>
 docker tag <commit-name> container-registry.stevenlacks.com/<resource>
 docker push container-registry.stevenlacks.com/<resource>
+docker pull container-registry.stevenlacks.com/<resource>
 ```
