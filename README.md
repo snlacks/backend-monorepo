@@ -1,9 +1,9 @@
-Basic Design
+### Basic Design
 
 domain.com -> front end
 domain.com/id -> auth-node, which relies on auth-mysql
 
-Dependencies for auth server
+### Dependencies for auth server
 
 MySQL database with a dedicated table
 smtp
@@ -49,8 +49,9 @@ scp -i ~/.ssh/[key] /.../auth-node.tar steven@159.89.233.185:/.../auth-node.tar
 
 Sharing to registry
 ```bash
-docker commit <container-id> <auth-node|auth-mysql|markdun-fe|etc...>
+# build -> tag -> run -> container id | commit | push
 docker tag <commit-name> container-registry.stevenlacks.com/<resource>
+docker commit <container-id> <auth-node|auth-mysql|markdun-fe|etc...>
 docker push container-registry.stevenlacks.com/<resource>
 docker pull container-registry.stevenlacks.com/<resource>
 ```
